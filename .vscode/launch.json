@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/sojib/Academics/4-1/Lab/Graphics/Practice/Day1",
-      "program": "/home/sojib/Academics/4-1/Lab/Graphics/Practice/Day1/build/Debug/outDebug",
+      "cwd": "/home/sojib/Academics/4-1/Lab/Graphics/Offline/Offline-1",
+      "program": "/home/sojib/Academics/4-1/Lab/Graphics/Offline/Offline-1/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
