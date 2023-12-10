@@ -111,7 +111,15 @@ void init()
 
 
 }
+point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
+{
+    point perpendicular ; 
+    perpendicular = rotatingVector.crossMul(withRespectTo) ; 
+    point newpoint ; 
+    newpoint = rotatingVector.scalarMul(cos(angle)).addition(perpendicular.scalarMul(sin(angle))) ; 
+    return newpoint ; 
 
+}
 void drawSquare(double a)
 {
      glBegin(GL_QUADS);{
@@ -129,30 +137,30 @@ void keyboard(unsigned char key , int a , int b)
     switch (key)
     {
     case '1':
-        camera_look=camera_look.scalarMul(cos(.1)).addition(camera_right.scalarMul(sin(.1))) ; 
-        camera_right=camera_right.scalarMul(cos(.1)).addition(camera_look.scalarMul(sin(.1))) ; 
+        camera_look = RodriGeneral(camera_look , camera_up , 0.1) ; 
+        camera_right = RodriGeneral(camera_right , camera_up , 0.1) ; 
         // to make sure rodr. works , the changed vector's axis needs to be changed at that degree to make sure they are still unit and perpendicular 
         break;
     case '2':
-        camera_look=camera_look.scalarMul(cos(-.1)).addition(camera_right.scalarMul(sin(-.1))) ; 
-        camera_right=camera_right.scalarMul(cos(-.1)).addition(camera_look.scalarMul(sin(-.1))) ; 
-        break;
+        camera_look = RodriGeneral(camera_look , camera_up , -0.1) ; 
+        camera_right = RodriGeneral(camera_right , camera_up , -0.1) ; 
+        break ; 
     case '3':
-        camera_up=camera_up.scalarMul(cos(.1)).addition(camera_look.scalarMul(sin(.1))) ; 
-        camera_look=camera_look.scalarMul(cos(.1)).addition(camera_up.scalarMul(sin(.1))) ; 
+        camera_look = RodriGeneral(camera_look , camera_right , 0.1) ; 
+        camera_up = RodriGeneral(camera_up , camera_right , 0.1) ; 
         break;
     case '4':
-        camera_up=camera_up.scalarMul(cos(.1)).addition(camera_look.scalarMul(sin(.1))) ;
-        camera_look=camera_look.scalarMul(cos(-.1)).addition(camera_up.scalarMul(sin(-.1))) ; 
+        camera_look = RodriGeneral(camera_look , camera_right , -0.1) ; 
+        camera_up = RodriGeneral(camera_up , camera_right , -0.1) ; 
 
         break;
     case '5':
-        camera_right=camera_right.scalarMul(cos(.1)).addition(camera_up.scalarMul(sin(.1))) ; 
-        camera_up=camera_up.scalarMul(cos(.1)).addition(camera_right.scalarMul(sin(.1))) ; 
+        camera_right = RodriGeneral(camera_right , camera_look , 0.1) ; 
+        camera_up = RodriGeneral(camera_up , camera_look , 0.1) ; 
         break;
     case '6':
-        camera_right=camera_right.scalarMul(cos(.1)).addition(camera_up.scalarMul(sin(.1))) ; 
-        camera_up=camera_up.scalarMul(cos(-.1)).addition(camera_right.scalarMul(sin(-.1))) ; 
+        camera_right = RodriGeneral(camera_right , camera_look , -0.1) ; 
+        camera_up = RodriGeneral(camera_up , camera_look , -0.1) ; 
         break;
 
     default:
