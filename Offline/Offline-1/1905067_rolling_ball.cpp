@@ -9,7 +9,15 @@ using namespace std ;
     #include <glut.h>
 #endif
 #include<math.h>
-#define pi (2*acos(0.0))
+#define pi (2*acos(0.0)) 
+#define red 1
+#define blue 2
+#define green 3
+#define yellow 4
+#define cyan 5
+#define magenta 6
+#define black 7
+#define white 8
 class point
 {
     double x ; 
@@ -60,6 +68,10 @@ class point
         point newpoint(y*p.getz()-z*p.gety() ,z*p.getx()-x*p.getz() , x*p.gety()-y*p.getx() ) ; 
         return newpoint ; 
     }
+    void show()
+    {
+        cout<<x<<","<<y<<","<<z<<"---" ; 
+    }
 
 
     
@@ -70,7 +82,7 @@ point position_of_camera ;
 point camera_up ; 
 point camera_look ; 
 point camera_right ; 
-double r_factor = 0.0 ; 
+
 point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
 {
     point perpendicular ; 
@@ -82,6 +94,10 @@ point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
 }
 void keyboard(unsigned char key , int a , int b)
 {
+    position_of_camera.show(); 
+    camera_look.show() ; 
+    camera_up.show() ; 
+    camera_right.show() ; 
     switch (key)
     {
     case '1':
@@ -110,16 +126,7 @@ void keyboard(unsigned char key , int a , int b)
         camera_right = RodriGeneral(camera_right , camera_look , -0.1) ; 
         camera_up = RodriGeneral(camera_up , camera_look , -0.1) ; 
         break;
-    case '.':
-        r_factor-=1.0/10.0 ; 
-        if(r_factor<=0.0)r_factor=0.0;
-        cout<<r_factor<<endl ; 
-        break;
-    case ',':
-        r_factor+=1.0/10.0 ; 
-        if(r_factor>=1.0)r_factor=1.0;
-        cout<<r_factor<<endl ; 
-        break;
+   
 
     default:
         break;
@@ -130,10 +137,14 @@ void keyboard(unsigned char key , int a , int b)
 //! Changes the camera position only but not the look up or right vectors
 void keystrokehandler(int key , int x  , int y)
 {
+    position_of_camera.show(); 
+    camera_look.show() ; 
+    camera_up.show() ; 
+    camera_right.show() ; 
     switch (key)
     {
     case GLUT_KEY_UP:
-        cout<<"aa"<<endl ; 
+        
         position_of_camera=position_of_camera.addition(camera_look) ; 
         break;
     case GLUT_KEY_DOWN:
@@ -163,87 +174,59 @@ void init()
     glMatrixMode(GL_PROJECTION) ; 
     glLoadIdentity();
     gluPerspective(70,1,1,1000); 
-    position_of_camera=point(8.0,8.0,8.0) ; 
-
+    
+    //! DATA TAKEN BY MANUAL CALCULATION 
+    position_of_camera=point(50,50,50) ; 
     camera_up=point(3.0/sqrt(18.0) ,0 , -3.0/sqrt(18.0) ) ; 
     camera_right=point(-1.0/sqrt(6.0) , 2.0/sqrt(6.0) , -1.0/sqrt(6.0) );
     camera_look=point(-1.0/sqrt(3.0) , -1.0/sqrt(3.0) , -1.0/sqrt(3.0));
 
-    // camera_up=point(0,0,1.0) ; 
-    // camera_right=point(-1.0/sqrt(2.0) , 1.0/sqrt(2.0) , 0.0 );
-    // camera_look=point(-1.0/sqrt(2.0) , -1.0/sqrt(2.0) , 0.0);
+    //! DATA TAKEN BY PRINTING VALUES , LOOKS BETTER 
+    position_of_camera=point(54.5543,66.7671,40.0021) ; 
+    camera_up=point(-0.304114,-0.49348,0.814857) ; 
+    camera_right=point(0.809328,-0.585029,-0.0522455);
+    camera_look=point(-0.502497,-0.643598,-0.577303);
 }
-
-void drawTriangle(int length)
-{
-    glBegin(GL_TRIANGLES) ; 
-    //glColor3f(1,0,0) ; 
-    glVertex3f(0,0,length) ; 
-    glVertex3f(0,length,0) ;    
-    glVertex3f(length,0,0) ;
-    glEnd() ;  
-}
-
-
-void drawUpperHalf()
-{
-    for(int i=0 ; i<4 ; i++)
-    {
-        if(i%2==0)glColor3f(0.0f, 1.0f, 1.0f); // Cyan
-        else glColor3f(1.0f, 0.0f, 1.0f); // Magenta
-        glPushMatrix() ; 
-        glRotatef(i*90 , 0 , 0 , 1) ; 
-        glTranslatef(r_factor/3.0,r_factor/3.0,r_factor/3.0) ; 
-       // glTranslatef(1.0/3.0,1.0/3.0,1.0/3.0) ; 
-        glScalef(1-r_factor,1-r_factor,1-r_factor) ; 
-        drawTriangle(5) ; 
-   
-        glPopMatrix() ; 
-    }
-
-       
-}
-void drawLowerHalf()
-{
-    for(int i=0 ; i<4 ; i++)
-    {
-        if(i%2==1)glColor3f(0.0f, 1.0f, 1.0f); // Cyan
-        else glColor3f(1.0f, 0.0f, 1.0f); // Magenta
-        glPushMatrix() ;
-        
-        glRotatef(180.0, 1, 1, 0); 
-        glRotatef(i*90 , 0 , 0 , 1) ; 
-        glTranslatef(r_factor/3.0,r_factor/3.0,r_factor/3.0) ;
-        //glTranslatef(1.0/3.0,1.0/3.0,1.0/3.0) ; 
-        glScalef(1-r_factor,1-r_factor,1-r_factor) ; 
-        drawTriangle(5) ; 
-        glPopMatrix() ;
-    }
-
-       
-}
-
-
-
-void drawOctaHedron()
-{
-
-    drawUpperHalf() ; 
-    drawLowerHalf() ;
- 
-
-    
-    
-
-}
-
 struct Sphere_point
 {
 	double x,y,z;
 };
+void setcolor(int color)
+{
+    switch (color)
+    {
+    case 1:
+        glColor3f(1.0,0.0,0.0) ; 
+        break;
+    case 2:
+        glColor3f(0.0,0.0,1.0) ; 
+        break;
+    case 3:
+        glColor3f(0.0,1.0,0.0) ; 
+        break;
+    case 4:
+        glColor3f(1.0,0.0,1.0) ; 
+        break;
+    case 5:
+        glColor3f(0.0f, 1.0f, 1.0f); 
+        break;
+    case 6:
+        glColor3f(1.0f, 0.0f, 1.0f);
+        break;
+    case 7:
+        glColor3f(0.0f, 0.0f, 0.0f);
+        break;
+    case 8:
+        glColor3f(1.0f, 1.0f, 1.0f);
+        break;
+    default:
+        printf("aeh?\n") ; 
+        break;
+    }
 
-// Taken direct from the main.cpp provided 
-void drawSphere(double radius,int slices,int stacks)
+}
+
+void drawBall(double radius,int slices,int stacks)
 {
 	struct Sphere_point points[100][100];
 	int i,j;
@@ -251,6 +234,7 @@ void drawSphere(double radius,int slices,int stacks)
 	//generate points
 	for(i=0;i<=stacks;i++)
 	{
+        
 		h=radius*sin(((double)i/(double)stacks)*(pi/2));
 		r=radius*cos(((double)i/(double)stacks)*(pi/2));
 		for(j=0;j<=slices;j++)
@@ -260,21 +244,31 @@ void drawSphere(double radius,int slices,int stacks)
 			points[i][j].z=h;
 		}
 	}
+
 	//draw quads using generated points
 	for(i=0;i<stacks;i++)
 	{
-        glColor3f((double)i/(double)stacks,(double)i/(double)stacks,(double)i/(double)stacks);
+        
+        //glColor3f((double)i/(double)stacks,(double)i/(double)stacks,(double)i/(double)stacks);
 		for(j=0;j<slices;j++)
 		{
-			glBegin(GL_QUADS);{
-                glColor3f(1.0 , 0.0 , 0.0)  ; 
+          
+            if(j%2==0)setcolor(red) ; 
+            else setcolor(green) ; 
+			glBegin(GL_QUADS);{ 
+                   
+            if(j%2==0)setcolor(red) ; 
+            else setcolor(green) ; 
 			    //upper hemisphere
 				glVertex3f(points[i][j].x,points[i][j].y,points[i][j].z);
 				glVertex3f(points[i][j+1].x,points[i][j+1].y,points[i][j+1].z);
 				glVertex3f(points[i+1][j+1].x,points[i+1][j+1].y,points[i+1][j+1].z);
 				glVertex3f(points[i+1][j].x,points[i+1][j].y,points[i+1][j].z);
                 //lower hemisphere
-                glColor3f(0.0 , 0.0 , 1.0)  ; 
+              
+            if(j%2==0)setcolor(green) ; 
+            else setcolor(red) ; 
+           
                 glVertex3f(points[i][j].x,points[i][j].y,-points[i][j].z);
 				glVertex3f(points[i][j+1].x,points[i][j+1].y,-points[i][j+1].z);
 				glVertex3f(points[i+1][j+1].x,points[i+1][j+1].y,-points[i+1][j+1].z);
@@ -283,12 +277,38 @@ void drawSphere(double radius,int slices,int stacks)
 		}
 	}
 }
-void drawCylinder()
+
+void drawFloor()
 {
-    
+	int square_length =5.0 ; 
+    double x=-100.0,y=-100.0;
+    for(int i=0 ; i<100 ; i++)
+    {
+        x=i*square_length ; 
+        for(int j=0 ; j<100 ; j++)
+        {
+            y=j*square_length ; 
+
+            if((i+j)%2==1)setcolor(black) ; 
+            else setcolor(white) ; 
+
+            glBegin(GL_QUADS) ; 
+            {
+                glVertex2f(x,y) ;
+                glVertex2f(x+square_length,y) ;
+                glVertex2f(x+square_length,y+square_length) ;
+                glVertex2f(x,y+square_length) ;
+
+            }
+            glEnd() ; 
+        }
+        
+    }
+
+	
 }
 
-void magic_cube()
+void rolling_ball()
 {
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
@@ -300,19 +320,15 @@ void magic_cube()
     camera_up.getx() , camera_up.gety() , camera_up.getz()
     ) ; 
     
-
- 
-
-
     glPushMatrix() ; 
-    //glRotatef(90,0,1,0) ; 
-    drawOctaHedron() ; 
-    drawSphere(2,24,20); 
-    drawCylinder() ; 
+    
+    drawFloor() ; 
+    glTranslatef(30,30,2) ; 
+    // radius , slice and stack 
+    drawBall(2,15,12) ; 
     glPopMatrix() ; 
     glutSwapBuffers() ; 
 }
-
 void idle()
 {    
     glutPostRedisplay(); 
@@ -321,14 +337,14 @@ int main(int argc , char** argv)
 {
     glutInit(&argc , argv) ; 
     glutInitWindowPosition(1000,200) ; 
-    glutInitWindowSize(600,600) ; 
+    glutInitWindowSize(650,650) ; 
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH) ; //RGB - Double buffer - depth buffer 
-    glutCreateWindow("Magic Cube") ; 
+    glutCreateWindow("Rolling Ball") ; 
 
     init() ; 
     glutSpecialFunc(keystrokehandler);
     glutKeyboardFunc(keyboard); 
-    glutDisplayFunc(magic_cube) ;
+    glutDisplayFunc(rolling_ball) ;
     glutIdleFunc(idle) ;
     glutMainLoop() ; 
     return 0 ; 

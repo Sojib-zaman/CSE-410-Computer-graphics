@@ -103,7 +103,11 @@ void init()
     camera_up=point(0,0,1.0) ; 
     camera_right=point(-1.0/sqrt(2.0) , 1.0/sqrt(2.0) , 0.0 );
     camera_look=point(-1.0/sqrt(2.0) , -1.0/sqrt(2.0) , 0.0);
-
+    
+    camera_up=point(3.0/sqrt(18.0) ,0 , -3.0/sqrt(18.0) ) ; 
+    camera_right=point(-1.0/sqrt(6.0) , 2.0/sqrt(6.0) , -1.0/sqrt(6.0) );
+    camera_look=point(-1.0/sqrt(3.0) , -1.0/sqrt(3.0) , -1.0/sqrt(3.0));
+    
     glMatrixMode(GL_PROJECTION) ; 
     glLoadIdentity();
     //. Field of view , aspect ratio , znear , zfar  
