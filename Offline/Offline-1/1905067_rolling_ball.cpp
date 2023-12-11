@@ -252,9 +252,7 @@ void drawBall(double radius,int slices,int stacks)
         //glColor3f((double)i/(double)stacks,(double)i/(double)stacks,(double)i/(double)stacks);
 		for(j=0;j<slices;j++)
 		{
-          
-            if(j%2==0)setcolor(red) ; 
-            else setcolor(green) ; 
+   
 			glBegin(GL_QUADS);{ 
                    
             if(j%2==0)setcolor(red) ; 
@@ -300,6 +298,7 @@ void drawFloor()
                 glVertex2f(x,y+square_length) ;
 
             }
+            
             glEnd() ; 
         }
         
@@ -308,6 +307,32 @@ void drawFloor()
 	
 }
 
+void draw_arrow(point ballpos , double arrow_length , double arrow_width , double angle )
+{
+ 
+    setcolor(blue) ;
+    glTranslatef(ballpos.getx(), ballpos.gety(), ballpos.getz());
+    glRotatef(angle, 1.0, 1.0, 0.0);
+    glBegin(GL_QUADS);
+    {
+        glVertex3f(0.0, 0.0, 0.0);
+        glVertex3f(arrow_length, 0.0, 0.0);
+        glVertex3f(arrow_length, arrow_width, 0.0);
+        glVertex3f(0.0, arrow_width, 0.0);
+    }
+    glEnd() ; 
+    double head_len = .8 ; 
+    double arrow_head = 0.1*arrow_length ; 
+    glTranslatef(0,.1,0);
+    glBegin(GL_TRIANGLES); 
+    {
+        glVertex3f(arrow_length, arrow_width , 0.0);
+        glVertex3f(arrow_length + arrow_head, 0.0, 0.0);
+        glVertex3f(arrow_length, -arrow_width , 0.0);
+    }
+    glEnd() ; 
+   
+}
 void rolling_ball()
 {
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -320,13 +345,30 @@ void rolling_ball()
     camera_up.getx() , camera_up.gety() , camera_up.getz()
     ) ; 
     
+    point ball_position = point(40,40,2) ; 
+    double ball_angle = 0  ; 
+
     glPushMatrix() ; 
-    
     drawFloor() ; 
-    glTranslatef(30,30,2) ; 
-    // radius , slice and stack 
-    drawBall(2,15,12) ; 
+    glPopMatrix() ;
+
+
+   
+    glPushMatrix();
+    //glScalef(2.0, 1.0, 1.0);
+    draw_arrow(ball_position, 5.0 , 0.3 , ball_angle);
+    glPopMatrix(); 
+
+
+
+    glPushMatrix() ; 
+    glTranslatef(ball_position.getx() , ball_position.gety() , ball_position.getz()) ; 
+    drawBall(2,15,12) ;  // radius , slice and stack 
     glPopMatrix() ; 
+
+
+
+
     glutSwapBuffers() ; 
 }
 void idle()
