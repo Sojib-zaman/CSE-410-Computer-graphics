@@ -9,6 +9,7 @@ using namespace std ;
     #include <glut.h>
 #endif
 #include<math.h>
+#include <chrono>
 #define pi (2*acos(0.0)) 
 #define red 1
 #define blue 2
@@ -18,6 +19,11 @@ using namespace std ;
 #define magenta 6
 #define black 7
 #define white 8
+
+
+
+
+
 class point
 {
     double x ; 
@@ -77,11 +83,32 @@ class point
     
 
 
-}; 
+};
+
+
+
+
+
+bool manual_ball_control = true ;
+int ball_angle = 0  ;
+int up_arrow_show = 0 ;  
 point position_of_camera ; 
 point camera_up ; 
 point camera_look ; 
 point camera_right ; 
+int ball_rolling_angle = 0 ; 
+point ball_position ; 
+double movement_amount = 2.0 ; 
+point adv_point;
+struct Sphere_point
+{
+	double x,y,z;
+};
+
+double angle_converter(double degree) {
+    return degree * M_PI / 180.0;
+}
+
 
 point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
 {
@@ -94,10 +121,10 @@ point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
 }
 void keyboard(unsigned char key , int a , int b)
 {
-    position_of_camera.show(); 
-    camera_look.show() ; 
-    camera_up.show() ; 
-    camera_right.show() ; 
+    // position_of_camera.show(); 
+    // camera_look.show() ; 
+    // camera_up.show() ; 
+    // camera_right.show() ; 
     switch (key)
     {
     case '1':
@@ -126,8 +153,33 @@ void keyboard(unsigned char key , int a , int b)
         camera_right = RodriGeneral(camera_right , camera_look , -0.1) ; 
         camera_up = RodriGeneral(camera_up , camera_look , -0.1) ; 
         break;
-   
-
+    case ' ':
+        manual_ball_control=!manual_ball_control ;
+        break ; 
+    case 'j':
+        ball_angle+=1 ; 
+        ball_angle=ball_angle%360 ; 
+        break ; 
+    case 'l':
+        if(ball_angle==0)ball_angle = 360 - 1 ;
+        else ball_angle-=1 ;
+        break ; 
+    case 'i':
+        adv_point = point(movement_amount*cos(angle_converter(ball_angle)) , movement_amount*sin(angle_converter(ball_angle)) , 0) ;
+        adv_point.show() ; 
+        ball_position = ball_position.addition(adv_point) ; 
+        ball_rolling_angle+=1 ;      
+        ball_position.show() ; 
+        cout<<ball_angle<<endl ; 
+        break ; 
+    case 'k':
+        adv_point = point(movement_amount*cos(angle_converter(ball_angle)) , movement_amount*sin(angle_converter(ball_angle)) , 0) ;
+        adv_point.show() ; 
+        ball_position = ball_position.subtraction(adv_point) ; 
+        ball_rolling_angle+=1 ;      
+        ball_position.show() ; 
+        cout<<ball_angle<<endl ; 
+        break ; 
     default:
         break;
     }
@@ -144,7 +196,6 @@ void keystrokehandler(int key , int x  , int y)
     switch (key)
     {
     case GLUT_KEY_UP:
-        
         position_of_camera=position_of_camera.addition(camera_look) ; 
         break;
     case GLUT_KEY_DOWN:
@@ -182,15 +233,14 @@ void init()
     camera_look=point(-1.0/sqrt(3.0) , -1.0/sqrt(3.0) , -1.0/sqrt(3.0));
 
     //! DATA TAKEN BY PRINTING VALUES , LOOKS BETTER 
-    position_of_camera=point(54.5543,66.7671,40.0021) ; 
+    position_of_camera=point(102.292,127.909,94.8459) ; 
     camera_up=point(-0.304114,-0.49348,0.814857) ; 
     camera_right=point(0.809328,-0.585029,-0.0522455);
     camera_look=point(-0.502497,-0.643598,-0.577303);
+
+    ball_position = point(80,80,5) ; 
 }
-struct Sphere_point
-{
-	double x,y,z;
-};
+
 void setcolor(int color)
 {
     switch (color)
@@ -248,7 +298,7 @@ void drawBall(double radius,int slices,int stacks)
 	//draw quads using generated points
 	for(i=0;i<stacks;i++)
 	{
-        
+        glRotatef(ball_rolling_angle , 0, 1 , 0) ; 
         //glColor3f((double)i/(double)stacks,(double)i/(double)stacks,(double)i/(double)stacks);
 		for(j=0;j<slices;j++)
 		{
@@ -307,12 +357,16 @@ void drawFloor()
 	
 }
 
-void draw_arrow(point ballpos , double arrow_length , double arrow_width , double angle )
+void draw_arrow(point ballpos , double arrow_length , double arrow_width , double angle , int color)
 {
- 
-    setcolor(blue) ;
+    
+    setcolor(color) ;
+    
     glTranslatef(ballpos.getx(), ballpos.gety(), ballpos.getz());
-    glRotatef(angle, 1.0, 1.0, 0.0);
+    if(color==2)
+        glRotatef(angle, 0.0, 0.0, 1.0);
+    else 
+        glRotatef(-90.0 ,0,1,0);
     glBegin(GL_QUADS);
     {
         glVertex3f(0.0, 0.0, 0.0);
@@ -323,7 +377,8 @@ void draw_arrow(point ballpos , double arrow_length , double arrow_width , doubl
     glEnd() ; 
     double head_len = .8 ; 
     double arrow_head = 0.1*arrow_length ; 
-    glTranslatef(0,.1,0);
+    double translate_arrow_head = 0.5 ; 
+    glTranslatef(0,translate_arrow_head,0);
     glBegin(GL_TRIANGLES); 
     {
         glVertex3f(arrow_length, arrow_width , 0.0);
@@ -335,6 +390,8 @@ void draw_arrow(point ballpos , double arrow_length , double arrow_width , doubl
 }
 void rolling_ball()
 {
+
+    
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
     glMatrixMode(GL_MODELVIEW); // Now working on model view matrix 
@@ -345,8 +402,8 @@ void rolling_ball()
     camera_up.getx() , camera_up.gety() , camera_up.getz()
     ) ; 
     
-    point ball_position = point(40,40,2) ; 
-    double ball_angle = 0  ; 
+    
+    
 
     glPushMatrix() ; 
     drawFloor() ; 
@@ -355,15 +412,23 @@ void rolling_ball()
 
    
     glPushMatrix();
-    //glScalef(2.0, 1.0, 1.0);
-    draw_arrow(ball_position, 5.0 , 0.3 , ball_angle);
+    draw_arrow(ball_position, 7.0 , 1.0 , ball_angle , blue);
     glPopMatrix(); 
 
+    if(up_arrow_show<100)
+    {
+        glPushMatrix();
+        draw_arrow(ball_position, 15.0 , 1.0 , ball_angle , cyan);
+        glPopMatrix();
+      
+    }
+    up_arrow_show++ ; 
+    up_arrow_show=up_arrow_show%200; 
 
 
-    glPushMatrix() ; 
+    glPushMatrix() ;
     glTranslatef(ball_position.getx() , ball_position.gety() , ball_position.getz()) ; 
-    drawBall(2,15,12) ;  // radius , slice and stack 
+    drawBall(5,15,12) ;  // radius , slice and stack 
     glPopMatrix() ; 
 
 
@@ -373,8 +438,11 @@ void rolling_ball()
 }
 void idle()
 {    
+    
     glutPostRedisplay(); 
 }
+
+ 
 int main(int argc , char** argv)
 {
     glutInit(&argc , argv) ; 
