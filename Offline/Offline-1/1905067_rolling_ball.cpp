@@ -98,8 +98,14 @@ point camera_look ;
 point camera_right ; 
 int ball_rolling_angle = 0 ; 
 point ball_position ; 
-double movement_amount = 2.0 ; 
+double movement_amount = 5.0 ; 
 point adv_point;
+int square_length =15.0 ; 
+
+
+
+
+
 struct Sphere_point
 {
 	double x,y,z;
@@ -121,10 +127,10 @@ point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
 }
 void keyboard(unsigned char key , int a , int b)
 {
-    // position_of_camera.show(); 
-    // camera_look.show() ; 
-    // camera_up.show() ; 
-    // camera_right.show() ; 
+    position_of_camera.show(); 
+    camera_look.show() ; 
+    camera_up.show() ; 
+    camera_right.show() ; 
     switch (key)
     {
     case '1':
@@ -233,12 +239,13 @@ void init()
     camera_look=point(-1.0/sqrt(3.0) , -1.0/sqrt(3.0) , -1.0/sqrt(3.0));
 
     //! DATA TAKEN BY PRINTING VALUES , LOOKS BETTER 
-    position_of_camera=point(102.292,127.909,94.8459) ; 
-    camera_up=point(-0.304114,-0.49348,0.814857) ; 
-    camera_right=point(0.809328,-0.585029,-0.0522455);
-    camera_look=point(-0.502497,-0.643598,-0.577303);
+    //position_of_camera=point(102.292,127.909,94.8459) ; 
+    position_of_camera=point(149.26,253.596,103.069) ; 
+    camera_up=point(-0.0293367,-0.834602,0.550071) ; 
+    camera_right=point(0.997508,0.0108813,0.0697086);
+    camera_look=point(0.0641645,-0.550745,-0.832204);
 
-    ball_position = point(80,80,5) ; 
+    ball_position = point(150,150,5) ; 
 }
 
 void setcolor(int color)
@@ -276,6 +283,8 @@ void setcolor(int color)
 
 }
 
+
+// This code is taken from main.cpp 
 void drawBall(double radius,int slices,int stacks)
 {
 	struct Sphere_point points[100][100];
@@ -328,12 +337,12 @@ void drawBall(double radius,int slices,int stacks)
 
 void drawFloor()
 {
-	int square_length =5.0 ; 
+	
     double x=-100.0,y=-100.0;
-    for(int i=0 ; i<100 ; i++)
+    for(int i=0 ; i<30 ; i++)
     {
         x=i*square_length ; 
-        for(int j=0 ; j<100 ; j++)
+        for(int j=0 ; j<30 ; j++)
         {
             y=j*square_length ; 
 
@@ -356,6 +365,60 @@ void drawFloor()
 
 	
 }
+
+
+void draw_tb_layers(double bx , double by , double bl , double bw, double height )
+{
+    glBegin(GL_QUADS) ; 
+    glVertex3f(bx, by, height);
+    glVertex3f(bx, by - bw, height);
+    glVertex3f(bx + bl, by - bw, height);
+    glVertex3f(bx + bl, by, height);
+    glEnd();
+
+
+}
+
+void draw_fb_layers(double bx , double by , double bl , double bw, double height )
+{
+    glBegin(GL_QUADS) ; 
+    glVertex3f(bx, by, 0.0);
+    glVertex3f(bx, by, height);
+    glVertex3f(bx + bl, by, height);
+    glVertex3f(bx + bl, by, 0.0);
+    glEnd();
+
+
+}
+
+void draw_lr_layers(double bx , double by , double bl , double bw, double height )
+{
+    glBegin(GL_QUADS) ; 
+    glVertex3f(bx, by - bw, 0.0);
+    glVertex3f(bx, by - bw, height);
+    glVertex3f(bx, by - bw, height);
+    glVertex3f(bx, by - bw, 0.0);
+    glEnd();
+
+
+}
+
+void draw_barrier(double bx , double by , double bl , double bw)
+{
+    double height = 4.0 ; 
+    setcolor(red) ;
+
+    draw_tb_layers(bx,by,bl,bw,0.0);
+    draw_tb_layers(bx,by,bl,bw,height);
+
+
+
+    draw_fb_layers(bx,by,bl,bw,height);
+    draw_fb_layers(bx,by - bw,bl,bw,height);
+    draw_lr_layers(bx,by,bl,bw,height) ;
+    draw_lr_layers(bx+bl,by,bl,bw,height) ;
+}
+
 
 void draw_arrow(point ballpos , double arrow_length , double arrow_width , double angle , int color)
 {
@@ -432,7 +495,34 @@ void rolling_ball()
     glPopMatrix() ; 
 
 
+    double bar_x = 100 ; 
+    double bar_y = 100 ; 
+    double bar_width= 5;
+    double bar_len= 100;
+    glPushMatrix() ; 
+    setcolor(red);
+    draw_barrier(bar_x , bar_y , bar_len,bar_width) ; 
+    glPopMatrix() ; 
 
+    glPushMatrix() ; 
+
+    glTranslatef(2*bar_len , 0 , 0) ;
+    glRotatef(90,0,0,1) ; 
+    draw_barrier(bar_x , bar_y , bar_len,bar_width) ; 
+    glPopMatrix() ; 
+
+    glPushMatrix() ; 
+
+    glTranslatef(3*bar_len , -5 , 0) ;
+    glRotatef(90,0,0,1) ; 
+    draw_barrier(bar_x , bar_y , bar_len,bar_width) ; 
+    glPopMatrix() ; 
+
+    glPushMatrix() ;
+     
+    glTranslatef(0, bar_len , 0) ;
+    draw_barrier(bar_x , bar_y , bar_len+5.5,bar_width) ; 
+    glPopMatrix() ; 
 
     glutSwapBuffers() ; 
 }
@@ -442,12 +532,13 @@ void idle()
     glutPostRedisplay(); 
 }
 
+
  
 int main(int argc , char** argv)
 {
     glutInit(&argc , argv) ; 
     glutInitWindowPosition(1000,200) ; 
-    glutInitWindowSize(650,650) ; 
+    glutInitWindowSize(1000,1000) ; 
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH) ; //RGB - Double buffer - depth buffer 
     glutCreateWindow("Rolling Ball") ; 
 
