@@ -521,7 +521,7 @@ void rolling_ball()
     glPushMatrix() ;
      
     glTranslatef(0, bar_len , 0) ;
-    draw_barrier(bar_x , bar_y , bar_len+5.5,bar_width) ; 
+    draw_barrier(bar_x , bar_y , bar_len+4,bar_width) ; 
     glPopMatrix() ; 
 
     glutSwapBuffers() ; 
