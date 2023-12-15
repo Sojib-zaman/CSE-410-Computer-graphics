@@ -2,6 +2,7 @@
 using namespace std ; 
 #include <ctime>
 #include <cstdlib>
+#include <chrono>
 #ifdef __linux__
     #include <GL/glut.h>
 #elif 
@@ -19,9 +20,12 @@ using namespace std ;
 #define magenta 6
 #define black 7
 #define white 8
-
-
-
+double bar_x = 100 ; 
+double bar_y = 100 ; 
+double bar_width= 5.0;
+double bar_len= 100;
+int collision_count = 0 ; 
+auto start_time = chrono::high_resolution_clock::now() ; 
 
 
 class point
@@ -108,9 +112,67 @@ point ball_up ;
 bool roll=false ; 
 point bprev_right ; 
 double ball_radius = 5.0 ; 
+vector<double>colltime  ; 
+
+#define posX 100
+#define negX 101 
+#define posY 102
+#define negY 103
+
+
+class Event 
+{
+    public:
+        double eventScheduledTime ;
+        int collision_count ; 
+        int wall_side ; 
+    Event()
+    {
+        eventScheduledTime = 0 ; 
+        collision_count = 0 ; 
+        wall_side=-1 ;
+    }
+    Event(double a , int b , int w )
+    {
+        eventScheduledTime = a ; 
+        collision_count = b ; 
+        wall_side = w; 
+    }
+   
+
+    bool operator<(const Event& other) const {
+        return eventScheduledTime > other.eventScheduledTime; 
+    }
 
 
 
+
+};
+
+priority_queue<Event> Event_PQ ;
+
+void check_reflection(double bar_x , double bar_y , double bar_len , double bar_width)
+{
+    // ball_position.show("ball position") ; 
+    // cout<<endl ; 
+    // cout<<ball_angle<<endl ; 
+
+    if(ball_position.getx()+ball_radius+bar_width>=bar_x+bar_len || ball_position.getx() <= bar_x+ball_radius+bar_width)
+    {
+        ball_look.setx(-1*ball_look.getx()) ;
+        ball_right.setx(-1*ball_right.getx()) ;
+        ball_angle=180+ball_angle ; 
+        collision_count++ ; 
+    }
+    if(ball_position.gety()>=bar_y+bar_len-ball_radius-bar_width || ball_position.gety() <= bar_y+ball_radius+bar_width)
+    {
+        ball_look.sety(-1*ball_look.gety()) ;
+        ball_right.sety(-1*ball_right.gety()) ;
+        ball_angle=180+ball_angle ; 
+        collision_count++ ; 
+    }
+
+}
 
 struct Sphere_point
 {
@@ -120,7 +182,53 @@ struct Sphere_point
 double angle_converter(double degree) {
     return degree * M_PI / 180.0;
 }
+void dis_calc()
+{
+    double initDisx1 = bar_x+bar_len-ball_position.getx()-ball_radius;
+    double initDisx2 = -bar_x+ball_position.getx()-ball_radius;
+    double initDisy1 = bar_y+bar_len-ball_position.gety()-ball_radius;
+    double initDisy2 = -bar_y+ball_position.gety()-ball_radius;
+    cout<<initDisx1<<" "<<initDisx2<<" "<<initDisy1<<" "<<initDisy2<<endl ;
 
+    // time calculation 
+    double tx1 = -1 , tx2 = -1 ; 
+    double ty1 = -1 , ty2 = -1 ; 
+    if(ball_look.getx()!=0)
+    {
+            tx1 = initDisx1/ball_look.getx() ; 
+            tx2 = -initDisx2/ball_look.getx() ; 
+    }
+    if(ball_look.gety()!=0)
+    {
+            ty1 = initDisy1/ball_look.gety() ; 
+            ty2 = -initDisy2/ball_look.gety() ; 
+    }
+    cout<<tx1<<" "<<tx2<<" "<<ty1<<" "<<ty2<<endl ; 
+
+    colltime.push_back(tx1) ; 
+    colltime.push_back(tx2) ; 
+    colltime.push_back(ty1) ; 
+    colltime.push_back(ty2) ; 
+    
+    vector<int> wallside = {posX , negX , posY , negY} ; 
+    for(int i=0 ; i<4 ; i++)
+    {
+        if(colltime[i]>0)
+        {
+            Event E= Event(colltime[i] , collision_count , wallside[i]) ; 
+            Event_PQ.push(E) ; 
+        }
+    }
+    while (!Event_PQ.empty()) {
+        Event currentEvent = Event_PQ.top();
+        Event_PQ.pop();
+        cout << "Time: " << currentEvent.eventScheduledTime<< ", Collision Count: " << currentEvent.collision_count << endl;
+    }
+
+
+
+   
+}
 
 point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
 {
@@ -173,33 +281,25 @@ void keyboard(unsigned char key , int a , int b)
     case 'j':
         roll=false ;
         ball_angle+=1 ; 
-        //ball_angle=ball_angle%360 ; 
         ball_look = RodriGeneral(ball_look , ball_up , -1)  ; 
         ball_right = RodriGeneral(ball_right , ball_up , -1)  ;
-
-        //cout<<"ball angle : "<<ball_angle<<endl ; 
-        //ball_look.show("ball look") ; 
+        dis_calc();
         break ; 
     case 'l':
         roll=false ;
         ball_angle-=1 ; 
         ball_look = RodriGeneral(ball_look , ball_up , 1)  ; 
         ball_right = RodriGeneral(ball_right , ball_up , 1)  ;
- 
-        //cout<<"ball angle : "<<ball_angle<<endl ; 
-        //ball_look.show("ball look") ; 
+        dis_calc();
         break ;  
     case 'i':
-        //ball_position.show("ball position")  ; 
-        //ball_look.show("ball look") ; 
-        //ball_right.show("ball right");
-        //cout<<endl ; 
         bprev_right=ball_right ; 
         roll=true ; 
         ball_rolling_angle+=rolling_amount ; 
         ball_position=ball_position.addition(ball_look) ;
         break;
     case 'k':
+         
         roll=true ; 
         bprev_right=ball_right ; 
         ball_rolling_angle-=rolling_amount ; 
@@ -267,7 +367,12 @@ void init()
     ball_position = point(150,150,5) ; 
     ball_look = point(1,0,0) ; 
     ball_right = point(0,1,0) ; 
-    ball_up = point(0,0,1) ; 
+    ball_up = point(0,0,1) ;
+
+
+
+
+
 }
 
 void setcolor(int color)
@@ -506,29 +611,15 @@ void draw_arrow(point ballpos , double arrow_length , double arrow_width , doubl
 }
 
 
-void check_reflection(double bar_x , double bar_y , double bar_len , double bar_width)
-{
-    // ball_position.show("ball position") ; 
-    // cout<<endl ; 
-    // cout<<ball_angle<<endl ; 
 
-    if(ball_position.getx()+ball_radius+bar_width>=bar_x+bar_len || ball_position.getx() <= bar_x+ball_radius+bar_width)
-    {
-        ball_look.setx(-1*ball_look.getx()) ;
-        ball_right.setx(-1*ball_right.getx()) ;
-        ball_angle=180+ball_angle ; 
-    }
-    if(ball_position.gety()>=bar_y+bar_len-ball_radius-bar_width || ball_position.gety() <= bar_y+ball_radius+bar_width)
-    {
-        ball_look.sety(-1*ball_look.gety()) ;
-        ball_right.sety(-1*ball_right.gety()) ;
-        ball_angle=180+ball_angle ; 
-    }
-
-}
 void rolling_ball()
 {
 
+
+    auto end_time = chrono::high_resolution_clock::now() ; 
+    chrono::duration<double> simulation_duration = end_time - start_time ;
+   // cout<<"Simulation time : "<<simulation_duration.count()<<" seconds "<<endl ; 
+    check_reflection(bar_x, bar_y,bar_len , bar_width);  
     
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
@@ -540,11 +631,8 @@ void rolling_ball()
     camera_up.getx() , camera_up.gety() , camera_up.getz()
     ) ; 
 
-    double bar_x = 100 ; 
-    double bar_y = 100 ; 
-    double bar_width= 5.0;
-    double bar_len= 100;
-    check_reflection(bar_x, bar_y,bar_len , bar_width);  
+ 
+   
     
     
 
@@ -621,7 +709,7 @@ int main(int argc , char** argv)
     glutInitWindowSize(1000,1000) ; 
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH) ; //RGB - Double buffer - depth buffer 
     glutCreateWindow("Rolling Ball") ; 
-
+    
     init() ; 
     glutSpecialFunc(keystrokehandler);
     glutKeyboardFunc(keyboard); 
