@@ -96,30 +96,34 @@ void drawCircle(double radius,int segments)
     }
 }
 
-void drawCone(double radius,double height,int segments)
+void drawCylinder(double radius, double height, int segments)
 {
     int i;
-    double shade;
     struct point points[100];
-    //generate points
-    for(i=0;i<=segments;i++)
-    {
-        points[i].x=radius*cos(((double)i/(double)segments)*2*pi);
-        points[i].y=radius*sin(((double)i/(double)segments)*2*pi);
-    }
-    //draw triangles using generated points
-    for(i=0;i<segments;i++)
-    {
-        //create shading effect
-        if(i<segments/2)shade=2*(double)i/(double)segments;
-        else shade=2*(1.0-(double)i/(double)segments);
-        glColor3f(shade,shade,shade);
 
-        glBegin(GL_TRIANGLES);
+    // Generate points
+    for (i = 0; i <= segments; i++)
+    {
+        points[i].x = radius * cos(((double)i / (double)segments) * 2 * pi);
+        points[i].y = radius * sin(((double)i / (double)segments) * 2 * pi);
+    }
+
+    // Draw quads using generated points
+    for (i = 0; i < segments; i++)
+    {
+        glBegin(GL_QUADS);
         {
-            glVertex3f(0,0,height);
-			glVertex3f(points[i].x,points[i].y,0);
-			glVertex3f(points[i+1].x,points[i+1].y,0);
+            // Bottom face
+            glVertex3f(points[i].x, points[i].y, 0);
+            glVertex3f(points[i + 1].x, points[i + 1].y, 0);
+            glVertex3f(points[i + 1].x, points[i + 1].y, height);
+            glVertex3f(points[i].x, points[i].y, height);
+
+            // Top face
+            glVertex3f(points[i].x, points[i].y, height);
+            glVertex3f(points[i + 1].x, points[i + 1].y, height);
+            glVertex3f(0, 0, height);
+            glVertex3f(0, 0, height);
         }
         glEnd();
     }
@@ -300,8 +304,8 @@ void display(){
 	****************************/
 	//add objects
 
-	drawAxes();
-	drawGrid();
+	//drawAxes();
+	//drawGrid();
 
     //glColor3f(1,0,0);
     //drawSquare(10);
@@ -310,9 +314,8 @@ void display(){
 
     //drawCircle(30,24);
 
-    //drawCone(20,50,24);
-
-	drawSphere(30,24,20);
+    drawCylinder(20,50,24);
+	//drawSphere(30,24,20);
 
 
 

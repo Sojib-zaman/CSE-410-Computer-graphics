@@ -512,7 +512,7 @@ void check_reflection(double bar_x , double bar_y , double bar_len , double bar_
     // cout<<endl ; 
     // cout<<ball_angle<<endl ; 
 
-    if(ball_position.getx()+ball_radius-bar_width>=bar_x+bar_len || ball_position.getx() <= bar_x+ball_radius+bar_width)
+    if(ball_position.getx()+ball_radius+bar_width>=bar_x+bar_len || ball_position.getx() <= bar_x+ball_radius+bar_width)
     {
         ball_look.setx(-1*ball_look.getx()) ;
         ball_right.setx(-1*ball_right.getx()) ;
