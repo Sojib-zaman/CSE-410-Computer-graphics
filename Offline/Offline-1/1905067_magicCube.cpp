@@ -10,76 +10,10 @@ using namespace std ;
 
 #endif
 #include<math.h>
-#define pi (2*acos(0.0))
-class point
-{
-    double x ; 
-    double y ; 
-    double z ; 
-    public : 
-    point()
-    {
-        x=0 ; 
-        y=0 ; 
-        z=0;
-    }
-    point(double a ,double b , double c)
-    {
-        x=a ; 
-        y=b; 
-        z=c ; 
-
-    }
-    double getx(){return x;} 
-    double gety(){return y;} 
-    double getz(){return z;} 
-
-    void setx(double a){x=a;}
-    void sety(double a){y=a;}
-    void setz(double a){z=a;}
-
-    point addition(point p)
-    {
-        point newpoint(x+p.getx() , y+p.gety() , z+p.getz()) ; 
-        return newpoint ; 
-    }
-    
-    point subtraction(point p)
-    {
-        point newpoint(x-p.getx() , y-p.gety() , z-p.getz()) ; 
-        return newpoint ; 
-    }
-
-   point scalarMul(double n)
-    {
-        point newpoint(x*n , y*n, z*n) ; 
-        return newpoint ; 
-    }
-
-   point crossMul(point p)
-    {
-        point newpoint(y*p.getz()-z*p.gety() ,z*p.getx()-x*p.getz() , x*p.gety()-y*p.getx() ) ; 
-        return newpoint ; 
-    }
+#include "helper.h"
 
 
-    
-
-
-}; 
-point position_of_camera ; 
-point camera_up ; 
-point camera_look ; 
-point camera_right ; 
-double r_factor = 1.0 ;
-#define red 1
-#define blue 2
-#define green 3
-#define yellow 4
-#define cyan 5
-#define magenta 6
-#define black 7
-#define white 8
+double r_factor = 0.0 ;
 double co_ord = 1.0 ; 
 
 double triangle_length()
@@ -96,56 +30,12 @@ double Cy_radius = 1.0/sqrt(3) ;
 
 
 
-
-
-void setcolor(int color)
-{
-    switch (color)
-    {
-    case 1:
-        glColor3f(1.0,0.0,0.0) ; 
-        break;
-    case 2:
-        glColor3f(0.0,0.0,1.0) ; 
-        break;
-    case 3:
-        glColor3f(0.0,1.0,0.0) ; 
-        break;
-    case 4:
-        glColor3f(1.0,1.0,0.0) ; 
-        break;
-    case 5:
-        glColor3f(0.0f, 1.0f, 1.0f); 
-        break;
-    case 6:
-        glColor3f(1.0f, 0.0f, 1.0f);
-        break;
-    case 7:
-        glColor3f(0.0f, 0.0f, 0.0f);
-        break;
-    case 8:
-        glColor3f(1.0f, 1.0f, 1.0f);
-        break;
-    default:
-        printf("aeh?\n") ; 
-        break;
-    }
-
-}
-
-
-
-point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
-{
-    point perpendicular ; 
-    perpendicular = rotatingVector.crossMul(withRespectTo) ; 
-    point newpoint ; 
-    newpoint = rotatingVector.scalarMul(cos(angle)).addition(perpendicular.scalarMul(sin(angle))) ; 
-    return newpoint ; 
-
-}
 void keyboard(unsigned char key , int a , int b)
 {
+    position_of_camera.show() ; 
+    camera_up.show()  ; 
+    camera_right.show() ; 
+    camera_look.show() ;
     switch (key)
     {
     case '2':
@@ -174,15 +64,30 @@ void keyboard(unsigned char key , int a , int b)
         camera_right = RodriGeneral(camera_right , camera_look , -0.1) ; 
         camera_up = RodriGeneral(camera_up , camera_look , -0.1) ; 
         break;
+    case '.':
+        r_factor-=1.0/10.0 ; 
+        if(r_factor<=0.0)r_factor=0.0;
+        cout<<r_factor<<endl ; 
+        break;
+    case ',':
+        r_factor+=1.0/10.0 ; 
+        if(r_factor>=1.0)r_factor=1.0;
+        cout<<r_factor<<endl ; 
+        break;
 
     default:
         break;
     }
 }
 
+
 //! Changes the camera position only but not the look up or right vectors
 void keystrokehandler(int key , int x  , int y)
 {
+    position_of_camera.show() ; 
+    camera_up.show()  ; 
+    camera_right.show() ; 
+    camera_look.show() ;
     switch (key)
     {
     case GLUT_KEY_UP:
@@ -218,10 +123,14 @@ void init()
     gluPerspective(70,1,1,1000); 
     position_of_camera=point(3,3,3) ; 
 
-    camera_up=point(3.0/sqrt(18.0) ,0 , -3.0/sqrt(18.0) ) ; 
-    camera_right=point(-1.0/sqrt(6.0) , 2.0/sqrt(6.0) , -1.0/sqrt(6.0) );
-    camera_look=point(-1.0/sqrt(3.0) , -1.0/sqrt(3.0) , -1.0/sqrt(3.0));
+    // camera_up=point(3.0/sqrt(18.0) ,0 , -3.0/sqrt(18.0) ) ; 
+    // camera_right=point(-1.0/sqrt(6.0) , 2.0/sqrt(6.0) , -1.0/sqrt(6.0) );
+    // camera_look=point(-1.0/sqrt(3.0) , -1.0/sqrt(3.0) , -1.0/sqrt(3.0));
 
+    
+    camera_up=point(0.816269,-0.39145,-0.42482 ) ; 
+    camera_right=point(-0.0192663,0.716543,-0.697277);
+    camera_look=point(-0.57735,-0.57735,-0.57735);
    
 }
 // actual length is root 2 (using 1)
