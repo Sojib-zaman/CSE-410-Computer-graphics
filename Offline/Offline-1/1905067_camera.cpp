@@ -8,85 +8,26 @@ using namespace std ;
     #include <glut.h>
 #endif
 #include<math.h>
-class point
-{
-    double x ; 
-    double y ; 
-    double z ; 
-    public : 
-    point()
-    {
-        x=0 ; 
-        y=0 ; 
-        z=0;
-    }
-    point(double a ,double b , double c)
-    {
-        x=a ; 
-        y=b; 
-        z=c ; 
-
-    }
-    double getx(){return x;} 
-    double gety(){return y;} 
-    double getz(){return z;} 
-
-    void setx(double a){x=a;}
-    void sety(double a){y=a;}
-    void setz(double a){z=a;}
-
-    point addition(point p)
-    {
-        point newpoint(x+p.getx() , y+p.gety() , z+p.getz()) ; 
-        return newpoint ; 
-    }
-    
-    point subtraction(point p)
-    {
-        point newpoint(x-p.getx() , y-p.gety() , z-p.getz()) ; 
-        return newpoint ; 
-    }
-
-   point scalarMul(double n)
-    {
-        point newpoint(x*n , y*n, z*n) ; 
-        return newpoint ; 
-    }
-
-   point crossMul(point p)
-    {
-        point newpoint(y*p.getz()-z*p.gety() ,z*p.getx()-x*p.getz() , x*p.gety()-y*p.getx() ) ; 
-        return newpoint ; 
-    }
-
-
-    
-
-
-}; 
-
-
+#include "helper.h"
 
 // 4 global parameters , one for the position 
 // 3 unit vectors for up , look and right 
 
-point position_of_camera ; 
-point camera_up ; 
-point camera_look ; 
-point camera_right ; 
+
 
 void draw_axes()
 {
-   glColor3f(1.0,1.0,1.0) ; 
    glBegin(GL_LINES);
    {
+    setcolor(magenta);
     glVertex3f(-400,0,0) ; 
     glVertex3f(400,0,0) ; 
 
+    setcolor(yellow) ; 
     glVertex3f(0,-400,0) ; 
     glVertex3f(0,400,0) ; 
 
-
+    setcolor(green);
     glVertex3f(0,0,-400) ; 
     glVertex3f(0,0,400) ; 
 
@@ -95,18 +36,24 @@ void draw_axes()
 
 void init()
 {
-    glEnable(GL_DEPTH_TEST) ; // enabled , so now depth buffer will work correctly 
-
-
-    position_of_camera=point(10.0 , 10.0 , 5.0) ; 
-
-    camera_up=point(0,0,1.0) ; 
-    camera_right=point(-1.0/sqrt(2.0) , 1.0/sqrt(2.0) , 0.0 );
-    camera_look=point(-1.0/sqrt(2.0) , -1.0/sqrt(2.0) , 0.0);
     
-    camera_up=point(3.0/sqrt(18.0) ,0 , -3.0/sqrt(18.0) ) ; 
-    camera_right=point(-1.0/sqrt(6.0) , 2.0/sqrt(6.0) , -1.0/sqrt(6.0) );
-    camera_look=point(-1.0/sqrt(3.0) , -1.0/sqrt(3.0) , -1.0/sqrt(3.0));
+
+
+    // position_of_camera=point(10.0 , 10.0 , 5.0) ; 
+
+    // camera_up=point(0,0,1.0) ; 
+    // camera_right=point(-1.0/sqrt(2.0) , 1.0/sqrt(2.0) , 0.0 );
+    // camera_look=point(-1.0/sqrt(2.0) , -1.0/sqrt(2.0) , 0.0);
+    
+    // camera_up=point(3.0/sqrt(18.0) ,0 , -3.0/sqrt(18.0) ) ; 
+    // camera_right=point(-1.0/sqrt(6.0) , 2.0/sqrt(6.0) , -1.0/sqrt(6.0) );
+    // camera_look=point(-1.0/sqrt(3.0) , -1.0/sqrt(3.0) , -1.0/sqrt(3.0));
+
+    position_of_camera=point(8.9513,7.19919,7.14119) ; 
+
+    camera_up=point(0.818987,-0.409701,-0.401753) ; 
+    camera_right=point(0.00718421,0.707414,-0.706763 );
+    camera_look=point(-0.573767,-0.575943,-0.582305);
     
     glMatrixMode(GL_PROJECTION) ; 
     glLoadIdentity();
@@ -115,15 +62,7 @@ void init()
 
 
 }
-point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
-{
-    point perpendicular ; 
-    perpendicular = rotatingVector.crossMul(withRespectTo) ; 
-    point newpoint ; 
-    newpoint = rotatingVector.scalarMul(cos(angle)).addition(perpendicular.scalarMul(sin(angle))) ; 
-    return newpoint ; 
 
-}
 void drawSquare(double a)
 {
      glBegin(GL_QUADS);{
@@ -138,14 +77,20 @@ void drawSquare(double a)
 //! camera position fixed , but change the look up or right vector 
 void keyboard(unsigned char key , int a , int b)
 {
+
+    position_of_camera.show(); 
+    camera_look.show() ; 
+    camera_up.show() ; 
+    camera_right.show() ;
+
     switch (key)
     {
-    case '1':
+    case '2':
         camera_look = RodriGeneral(camera_look , camera_up , 0.1) ; 
         camera_right = RodriGeneral(camera_right , camera_up , 0.1) ; 
         // to make sure rodr. works , the changed vector's axis needs to be changed at that degree to make sure they are still unit and perpendicular 
         break;
-    case '2':
+    case '1':
         camera_look = RodriGeneral(camera_look , camera_up , -0.1) ; 
         camera_right = RodriGeneral(camera_right , camera_up , -0.1) ; 
         break ; 
@@ -158,11 +103,11 @@ void keyboard(unsigned char key , int a , int b)
         camera_up = RodriGeneral(camera_up , camera_right , -0.1) ; 
 
         break;
-    case '5':
+    case '6':
         camera_right = RodriGeneral(camera_right , camera_look , 0.1) ; 
         camera_up = RodriGeneral(camera_up , camera_look , 0.1) ; 
         break;
-    case '6':
+    case '5':
         camera_right = RodriGeneral(camera_right , camera_look , -0.1) ; 
         camera_up = RodriGeneral(camera_up , camera_look , -0.1) ; 
         break;
@@ -176,6 +121,13 @@ void keyboard(unsigned char key , int a , int b)
 //! Changes the camera position only but not the look up or right vectors
 void keystrokehandler(int key , int x  , int y)
 {
+
+    position_of_camera.show(); 
+    camera_look.show() ; 
+    camera_up.show() ; 
+    camera_right.show() ;
+
+
     switch (key)
     {
     case GLUT_KEY_UP:
@@ -185,10 +137,10 @@ void keystrokehandler(int key , int x  , int y)
     case GLUT_KEY_DOWN:
         position_of_camera=position_of_camera.subtraction(camera_look) ; 
         break;
-    case GLUT_KEY_RIGHT:
+    case GLUT_KEY_LEFT:
         position_of_camera=position_of_camera.addition(camera_right) ; 
         break;
-    case GLUT_KEY_LEFT:
+    case GLUT_KEY_RIGHT:
         position_of_camera=position_of_camera.subtraction(camera_right) ; 
         break;
     case GLUT_KEY_PAGE_UP:
@@ -198,7 +150,7 @@ void keystrokehandler(int key , int x  , int y)
         position_of_camera=position_of_camera.subtraction(camera_up) ; 
         break;
     default:
-        printf("aeh?\n") ; 
+        //printf("aeh?\n") ; 
         break;
     }
 }
@@ -210,6 +162,7 @@ void idle()
 
 void showCube()
 {
+    glEnable(GL_DEPTH_TEST) ; // enabled , so now depth buffer will work correctly 
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
@@ -231,7 +184,7 @@ void showCube()
     for(int i=0 ; i<4; i++)
     {
         glPushMatrix(); 
-        glColor3f(1,0,0) ; 
+        setcolor((i+1)%9);
         glRotatef(i*90 , 1,0,0);  // angle and then the axis around which it will be rotated           
         glTranslatef(0,0,2) ; 
         drawSquare(2);
@@ -239,14 +192,17 @@ void showCube()
 
         
 
-       
+       if(i!=3)
+       {
         glPushMatrix();  
-        glColor3f(0,1,0) ; 
-        glRotatef(i*90 ,0,1,0);             
+        setcolor((i+5)%9); 
+        glRotatef((i+1)*90 ,0,1,0);             
         glTranslatef(0,0,2) ;  
         drawSquare(2);
         glPopMatrix();
     
+       }
+
     
     }
     glutSwapBuffers() ; 

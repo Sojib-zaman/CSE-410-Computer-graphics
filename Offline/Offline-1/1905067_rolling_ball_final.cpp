@@ -11,15 +11,7 @@ using namespace std ;
 #endif
 #include<math.h>
 #include <chrono>
-#define pi (2*acos(0.0)) 
-#define red 1
-#define blue 2
-#define green 3
-#define yellow 4
-#define cyan 5
-#define magenta 6
-#define black 7
-#define white 8
+#include<helper.h>
 double bar_x = 100 ; 
 double bar_y = 100 ; 
 double bar_width= 5.0;
@@ -27,67 +19,6 @@ double bar_len= 100;
 int collision_count = 0 ; 
 auto start_time = chrono::high_resolution_clock::now() ; 
 double jl_angle = 20 ; 
-
-class point
-{
-    double x ; 
-    double y ; 
-    double z ; 
-    public : 
-    point()
-    {
-        x=0 ; 
-        y=0 ; 
-        z=0;
-    }
-    point(double a ,double b , double c)
-    {
-        x=a ; 
-        y=b; 
-        z=c ; 
-
-    }
-    double getx(){return x;} 
-    double gety(){return y;} 
-    double getz(){return z;} 
-
-    void setx(double a){x=a;}
-    void sety(double a){y=a;}
-    void setz(double a){z=a;}
-
-    point addition(point p)
-    {
-        point newpoint(x+p.getx() , y+p.gety() , z+p.getz()) ; 
-        return newpoint ; 
-    }
-    
-    point subtraction(point p)
-    {
-        point newpoint(x-p.getx() , y-p.gety() , z-p.getz()) ; 
-        return newpoint ; 
-    }
-
-   point scalarMul(double n)
-    {
-        point newpoint(x*n , y*n, z*n) ; 
-        return newpoint ; 
-    }
-
-   point crossMul(point p)
-    {
-        point newpoint(y*p.getz()-z*p.gety() ,z*p.getx()-x*p.getz() , x*p.gety()-y*p.getx() ) ; 
-        return newpoint ; 
-    }
-    void show(string str)
-    {
-        cout<<str<<" "<<x<<","<<y<<","<<z<<"---"<<endl ; 
-    }
-
-
-    
-
-
-};
 
 
 
@@ -267,12 +198,12 @@ void keyboard(unsigned char key , int a , int b)
     // camera_right.show() ; 
     switch (key)
     {
-    case '1':
+    case '2':
         camera_look = RodriGeneral(camera_look , camera_up , 0.1) ; 
         camera_right = RodriGeneral(camera_right , camera_up , 0.1) ; 
         // to make sure rodr. works , the changed vector's axis needs to be changed at that degree to make sure they are still unit and perpendicular 
         break;
-    case '2':
+    case '1':
         camera_look = RodriGeneral(camera_look , camera_up , -0.1) ; 
         camera_right = RodriGeneral(camera_right , camera_up , -0.1) ; 
         break ; 
@@ -285,11 +216,11 @@ void keyboard(unsigned char key , int a , int b)
         camera_up = RodriGeneral(camera_up , camera_right , -0.1) ; 
 
         break;
-    case '5':
+    case '6':
         camera_right = RodriGeneral(camera_right , camera_look , 0.1) ; 
         camera_up = RodriGeneral(camera_up , camera_look , 0.1) ; 
         break;
-    case '6':
+    case '5':
         camera_right = RodriGeneral(camera_right , camera_look , -0.1) ; 
         camera_up = RodriGeneral(camera_up , camera_look , -0.1) ; 
         break;
@@ -351,10 +282,10 @@ void keystrokehandler(int key , int x  , int y)
     case GLUT_KEY_DOWN:
         position_of_camera=position_of_camera.subtraction(camera_look) ; 
         break;
-    case GLUT_KEY_RIGHT:
+    case GLUT_KEY_LEFT:
         position_of_camera=position_of_camera.addition(camera_right) ; 
         break;
-    case GLUT_KEY_LEFT:
+    case GLUT_KEY_RIGHT:
         position_of_camera=position_of_camera.subtraction(camera_right) ; 
         break;
     case GLUT_KEY_PAGE_UP:
@@ -396,41 +327,6 @@ void init()
 
 
 
-
-}
-
-void setcolor(int color)
-{
-    switch (color)
-    {
-    case 1:
-        glColor3f(1.0,0.0,0.0) ; 
-        break;
-    case 2:
-        glColor3f(0.0,0.0,1.0) ; 
-        break;
-    case 3:
-        glColor3f(0.0,1.0,0.0) ; 
-        break;
-    case 4:
-        glColor3f(1.0,1.0,0.0) ; 
-        break;
-    case 5:
-        glColor3f(0.0f, 1.0f, 1.0f); 
-        break;
-    case 6:
-        glColor3f(1.0f, 0.0f, 1.0f);
-        break;
-    case 7:
-        glColor3f(0.0f, 0.0f, 0.0f);
-        break;
-    case 8:
-        glColor3f(1.0f, 1.0f, 1.0f);
-        break;
-    default:
-        printf("aeh?\n") ; 
-        break;
-    }
 
 }
 
@@ -742,7 +638,7 @@ void rolling_ball()
     glPushMatrix() ;
     glTranslatef(ball_position.getx() , ball_position.gety() , ball_position.getz()) ; 
     if(roll)
-        glRotatef(ball_rolling_angle ,  ball_right.getx() , ball_right.gety() , ball_right.getz() ) ;
+        glRotatef(ball_rolling_angle ,  ball_right.getx() , ball_right.gety() , ball_right.getz() ) ; //! angle 
     else glRotatef(ball_rolling_angle ,  bprev_right.getx() , bprev_right.gety() , bprev_right.getz() ) ;
     drawBall(ball_radius,15,12) ;  // radius , slice and stack 
     glPopMatrix() ; 

@@ -148,12 +148,12 @@ void keyboard(unsigned char key , int a , int b)
 {
     switch (key)
     {
-    case '1':
+    case '2':
         camera_look = RodriGeneral(camera_look , camera_up , 0.1) ; 
         camera_right = RodriGeneral(camera_right , camera_up , 0.1) ; 
         // to make sure rodr. works , the changed vector's axis needs to be changed at that degree to make sure they are still unit and perpendicular 
         break;
-    case '2':
+    case '1':
         camera_look = RodriGeneral(camera_look , camera_up , -0.1) ; 
         camera_right = RodriGeneral(camera_right , camera_up , -0.1) ; 
         break ; 
@@ -166,30 +166,19 @@ void keyboard(unsigned char key , int a , int b)
         camera_up = RodriGeneral(camera_up , camera_right , -0.1) ; 
 
         break;
-    case '5':
+    case '6':
         camera_right = RodriGeneral(camera_right , camera_look , 0.1) ; 
         camera_up = RodriGeneral(camera_up , camera_look , 0.1) ; 
         break;
-    case '6':
+    case '5':
         camera_right = RodriGeneral(camera_right , camera_look , -0.1) ; 
         camera_up = RodriGeneral(camera_up , camera_look , -0.1) ; 
-        break;
-    case '.':
-        r_factor-=1.0/10.0 ; 
-        if(r_factor<=0.0)r_factor=0.0;
-        cout<<r_factor<<endl ; 
-        break;
-    case ',':
-        r_factor+=1.0/10.0 ; 
-        if(r_factor>=1.0)r_factor=1.0;
-        cout<<r_factor<<endl ; 
         break;
 
     default:
         break;
     }
 }
-
 
 //! Changes the camera position only but not the look up or right vectors
 void keystrokehandler(int key , int x  , int y)
@@ -203,10 +192,10 @@ void keystrokehandler(int key , int x  , int y)
     case GLUT_KEY_DOWN:
         position_of_camera=position_of_camera.subtraction(camera_look) ; 
         break;
-    case GLUT_KEY_RIGHT:
+    case GLUT_KEY_LEFT:
         position_of_camera=position_of_camera.addition(camera_right) ; 
         break;
-    case GLUT_KEY_LEFT:
+    case GLUT_KEY_RIGHT:
         position_of_camera=position_of_camera.subtraction(camera_right) ; 
         break;
     case GLUT_KEY_PAGE_UP:
@@ -453,7 +442,7 @@ void Cylinder(double h , double r)
             y2=r*sin(angle);
             glVertex3f(x2,y2,h/2);
             glVertex3f(x2,y2,-h/2); 
-            glVertex3f(x1,y1,h/2);
+            glVertex3f(x1,y1,-h/2);
             glVertex3f(x1,y1,h/2);
             x1=x2;
             y1=y2;
