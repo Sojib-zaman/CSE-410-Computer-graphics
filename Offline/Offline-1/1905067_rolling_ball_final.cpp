@@ -11,7 +11,8 @@ using namespace std ;
 #endif
 #include<math.h>
 #include <chrono>
-#include<helper.h>
+#include "helper.h"
+
 double bar_x = 100 ; 
 double bar_y = 100 ; 
 double bar_width= 5.0;
@@ -27,10 +28,7 @@ double jl_angle = 20 ;
 bool manual_ball_control = true ;
 int ball_angle = 0  ;
 int up_arrow_show = 0 ;  
-point position_of_camera ; 
-point camera_up ; 
-point camera_look ; 
-point camera_right ; 
+
 int ball_rolling_angle = 0 ; 
 int rolling_amount = 5 ; 
 point ball_position ; 
@@ -45,53 +43,9 @@ point bprev_right ;
 double ball_radius = 5.0 ; 
 
 
-#define posX 100
-#define negX 101 
-#define posY 102
-#define negY 103
-
-
-class Event 
-{
-    public:
-        double eventScheduledTime ;
-        int collision_count ; 
-        int wall_side ; 
-    Event()
-    {
-        eventScheduledTime = 0 ; 
-        collision_count = 0 ; 
-        wall_side=-1 ;
-    }
-    Event(double a , int b , int w )
-    {
-        eventScheduledTime = a ; 
-        collision_count = b ; 
-        wall_side = w; 
-    }
-   
-
-    bool operator<(const Event& other) const {
-        return eventScheduledTime > other.eventScheduledTime; 
-    }
 
 
 
-
-};
-
-priority_queue<Event> Event_PQ ;
-void showPQ() {
-    std::priority_queue<Event> tempQueue = Event_PQ; 
-
-    while (!tempQueue.empty()) {
-        Event currentEvent = tempQueue.top();
-
-        //cout << "Time: " << currentEvent.eventScheduledTime<< ", Collision Count: " << currentEvent.collision_count << std::endl;
-
-        tempQueue.pop();  
-    }
-}
 void check_reflection(double bar_x , double bar_y , double bar_len , double bar_width)
 {
     // ball_position.show("ball position") ; 
@@ -179,17 +133,6 @@ void dis_calc()
    
 }
 
-point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
-{
-    point perpendicular ; 
-    perpendicular = rotatingVector.crossMul(withRespectTo) ;
-    //perpendicular = ball_up ; 
-    //perpendicular.show("perpendicular") ;  
-    point newpoint ; 
-    newpoint = rotatingVector.scalarMul(cos(angle_converter(angle))).addition(perpendicular.scalarMul(sin(angle_converter(angle)))) ; 
-    return newpoint ; 
-
-}
 void keyboard(unsigned char key , int a , int b)
 {
     // position_of_camera.show(); 
@@ -563,10 +506,8 @@ void EventScheduler(double elapsed_time)
                 collision_count++ ;                 
             }
             Event_PQ.pop() ; 
-            cout<<"AFTER bari 1 , PQ "<< Event_PQ.size()<<endl ; 
             showPQ();
             dis_calc() ;
-            cout<<"AFTER bari 2 , PQ "<< Event_PQ.size()<<endl ; 
             showPQ();
             
         }

@@ -12,7 +12,8 @@ using namespace std ;
 #include<math.h>
 #include "helper.h"
 
-
+double horizontal_rotation_angle ; 
+double ad_inc ; 
 double r_factor = 0.0 ;
 double co_ord = 1.0 ; 
 
@@ -74,7 +75,12 @@ void keyboard(unsigned char key , int a , int b)
         if(r_factor>=1.0)r_factor=1.0;
         cout<<r_factor<<endl ; 
         break;
-
+    case 'a':
+        horizontal_rotation_angle-=ad_inc ;
+        break;
+    case 'd':
+        horizontal_rotation_angle+=ad_inc ;
+        break;
     default:
         break;
     }
@@ -131,7 +137,9 @@ void init()
     camera_up=point(0.816269,-0.39145,-0.42482 ) ; 
     camera_right=point(-0.0192663,0.716543,-0.697277);
     camera_look=point(-0.57735,-0.57735,-0.57735);
-   
+
+    horizontal_rotation_angle=0.0 ; 
+    ad_inc=20.0;
 }
 // actual length is root 2 (using 1)
 void drawTriangle(int co_ord)
@@ -418,8 +426,8 @@ void magic_cube()
     
 
  
-
-
+    glPushMatrix();
+    glRotatef(horizontal_rotation_angle,1,0,0);
     glPushMatrix() ; 
     drawOctaHedron() ; 
     glPopMatrix() ; 
@@ -429,7 +437,7 @@ void magic_cube()
     glPushMatrix() ; 
     drawCylinderStructure(Cy_radius , Cy_height) ;
     glPopMatrix() ; 
-
+    glPopMatrix() ; 
 
     glutSwapBuffers() ; 
 }
