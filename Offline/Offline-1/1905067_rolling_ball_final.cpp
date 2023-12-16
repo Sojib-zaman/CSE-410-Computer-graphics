@@ -48,21 +48,22 @@ double ball_radius = 5.0 ;
 
 void check_reflection(double bar_x , double bar_y , double bar_len , double bar_width)
 {
-    // ball_position.show("ball position") ; 
+    ball_position.show("ball position") ; 
     // cout<<endl ; 
     // cout<<ball_angle<<endl ; 
 
-    if(ball_position.getx()+ball_radius+bar_width>=bar_x+bar_len || ball_position.getx() <= bar_x+ball_radius+bar_width)
+    if(ball_position.getx()>=bar_x+bar_len-ball_radius || ball_position.getx() <= bar_x+ball_radius+bar_width)
     {
+
         ball_look.setx(-1*ball_look.getx()) ;
-        ball_right.setx(-1*ball_right.getx()) ;
+        ball_right.sety(-1*ball_right.gety()) ;
         ball_angle=180+ball_angle ; 
         collision_count++ ; 
     }
     if(ball_position.gety()>=bar_y+bar_len-ball_radius-bar_width || ball_position.gety() <= bar_y+ball_radius+bar_width)
     {
         ball_look.sety(-1*ball_look.gety()) ;
-        ball_right.sety(-1*ball_right.gety()) ;
+        ball_right.setx(-1*ball_right.getx()) ;
         ball_angle=180+ball_angle ; 
         collision_count++ ; 
     }
@@ -135,7 +136,7 @@ void dis_calc()
 
 void keyboard(unsigned char key , int a , int b)
 {
-    // position_of_camera.show(); 
+    position_of_camera.show(); 
     // camera_look.show() ; 
     // camera_up.show() ; 
     // camera_right.show() ; 
@@ -195,14 +196,16 @@ void keyboard(unsigned char key , int a , int b)
         bprev_right=ball_right ; 
         roll=true ; 
         ball_rolling_angle+=rolling_amount ; 
-        ball_position=ball_position.addition(ball_look) ;
+        ball_position=ball_position.addition(ball_look.scalarMul(2.0)) ;
+        check_reflection(bar_x,bar_y,bar_len,bar_width);
         break;
     case 'k':
          
         roll=true ; 
         bprev_right=ball_right ; 
         ball_rolling_angle-=rolling_amount ; 
-        ball_position=ball_position.subtraction(ball_look) ;
+        ball_position=ball_position.subtraction(ball_look.scalarMul(2.0)) ;
+        check_reflection(bar_x,bar_y,bar_len,bar_width);
         break;
     default:
         break;
@@ -213,7 +216,7 @@ void keyboard(unsigned char key , int a , int b)
 //! Changes the camera position only but not the look up or right vectors
 void keystrokehandler(int key , int x  , int y)
 {
-    // position_of_camera.show(); 
+    position_of_camera.show(); 
     // camera_look.show() ; 
     // camera_up.show() ; 
     // camera_right.show() ; 
@@ -258,7 +261,7 @@ void init()
 
     //! DATA TAKEN BY PRINTING VALUES , LOOKS BETTER 
     //position_of_camera=point(102.292,127.909,94.8459) ; 
-    position_of_camera=point(149.26,253.596,103.069) ; 
+    position_of_camera=point(163.298,223.009,109.683) ; 
     camera_up=point(-0.0293367,-0.834602,0.550071) ; 
     camera_right=point(0.997508,0.0108813,0.0697086);
     camera_look=point(0.0641645,-0.550745,-0.832204);
@@ -532,10 +535,11 @@ void rolling_ball()
    
     
     if(manual_ball_control)
-        check_reflection(bar_x, bar_y,bar_len , bar_width);  
+       {
+        // check_reflection(bar_x, bar_y,bar_len , bar_width);  
+       }
     else 
     {
-        
         EventScheduler(simulation_duration.count());
     }
 
