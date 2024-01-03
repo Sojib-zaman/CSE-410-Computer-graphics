@@ -194,13 +194,6 @@ void drawOctaHedron()
 }
 
 
-
-struct Sphere_point
-{
-	double x,y,z;
-};
-
-
 //! CODE TAKEN FROM THE LINK PROVIDED IN THE SPEC ( MODIFIED IN THE RECEIVING END )
 // generate vertices for +X face only by intersecting 2 circular planes
 // (longitudinal and latitudinal) at the given longitude/latitude angles

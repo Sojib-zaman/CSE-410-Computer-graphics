@@ -20,8 +20,8 @@ double bar_len= 100;
 int collision_count = 0 ; 
 auto start_time = chrono::high_resolution_clock::now() ; 
 double jl_angle = 20 ; 
-
-
+int ft=1 ; 
+int rrr=-1 ;
 
 
 
@@ -41,8 +41,7 @@ point ball_up ;
 bool roll=false ; 
 point bprev_right ; 
 double ball_radius = 5.0 ; 
-
-
+point preserve_right ; 
 
 
 
@@ -70,10 +69,7 @@ void check_reflection(double bar_x , double bar_y , double bar_len , double bar_
 
 }
 
-struct Sphere_point
-{
-	double x,y,z;
-};
+
 
 double angle_converter(double degree) {
     return degree * M_PI / 180.0;
@@ -133,10 +129,25 @@ void dis_calc()
 
    
 }
+void sphere_roll(int slices , int stacks)
+{
+    if(roll)
+    {
+        
+            for(int i=0;i<=stacks;i++)
+            {	
+                for(int j=0;j<=slices;j++)
+                {
+                    points[i][j] = RodriSpGeneral(points[i][j] , ball_right , ball_rolling_angle) ; 
+                }
+            }
+    }
 
+}
+int skip = 300 ; 
 void keyboard(unsigned char key , int a , int b)
 {
-    position_of_camera.show(); 
+    //position_of_camera.show(); 
     // camera_look.show() ; 
     // camera_up.show() ; 
     // camera_right.show() ; 
@@ -170,42 +181,53 @@ void keyboard(unsigned char key , int a , int b)
         break;
     case ' ':
         manual_ball_control=!manual_ball_control ;
+        roll=true ; 
+        
         dis_calc() ; 
         //cout<<"AFTER space , PQ "<< Event_PQ.size()<<endl ; 
         break ; 
     case 'j':
-        roll=false ;
+        skip = 0 ; 
+        bprev_right.setattr(preserve_right.getx() , preserve_right.gety() , preserve_right.getz()); 
+        if(manual_ball_control)
+            roll=false ;
         ball_angle+=jl_angle ; 
         ball_look = RodriGeneral(ball_look , ball_up , -jl_angle)  ; 
         ball_right = RodriGeneral(ball_right , ball_up , -jl_angle)  ;
         dis_calc();
-        //cout<<"AFTER j , PQ "<< Event_PQ.size()<<endl ; 
         showPQ() ;
         break ; 
     case 'l':
+        skip = 0 ; 
+        bprev_right.setattr(preserve_right.getx() , preserve_right.gety() , preserve_right.getz()); 
         cout<<"l pressed"<<endl ; 
-        roll=false ;
+        if(manual_ball_control)
+            roll=false ;
         ball_angle-=jl_angle ; 
         ball_look = RodriGeneral(ball_look , ball_up ,jl_angle)  ; 
         ball_right = RodriGeneral(ball_right , ball_up ,jl_angle)  ;
         dis_calc();
-        //cout<<"AFTER l , PQ "<< Event_PQ.size()<<endl ;
         showPQ() ;
         break ;  
     case 'i':
-        bprev_right=ball_right ; 
-        roll=true ; 
+        skip++ ;
+        if(skip>=150) roll=true ; 
+        preserve_right.setattr(ball_right.getx() , ball_right.gety() , ball_right.getz()); 
+
         ball_rolling_angle+=rolling_amount ; 
         ball_position=ball_position.addition(ball_look.scalarMul(2.0)) ;
+        sphere_roll(15,12);
         check_reflection(bar_x,bar_y,bar_len,bar_width);
         break;
     case 'k':
-         
-        roll=true ; 
-        bprev_right=ball_right ; 
+        skip++ ;
+        if(skip>=15) roll=true ;   
+        preserve_right.setattr(ball_right.getx() , ball_right.gety() , ball_right.getz()); 
         ball_rolling_angle-=rolling_amount ; 
         ball_position=ball_position.subtraction(ball_look.scalarMul(2.0)) ;
+        //sphere_roll(15,12);
         check_reflection(bar_x,bar_y,bar_len,bar_width);
+
         break;
     default:
         break;
@@ -216,7 +238,7 @@ void keyboard(unsigned char key , int a , int b)
 //! Changes the camera position only but not the look up or right vectors
 void keystrokehandler(int key , int x  , int y)
 {
-    position_of_camera.show(); 
+    //position_of_camera.show(); 
     // camera_look.show() ; 
     // camera_up.show() ; 
     // camera_right.show() ; 
@@ -270,9 +292,29 @@ void init()
     ball_look = point(1,0,0) ; 
     ball_right = point(0,1,0) ; 
     ball_up = point(0,0,1) ;
+    preserve_right=point(0,1,0) ;
+    //bprev_right=preserve_right;
 
 
 
+}
+void genPoints(double radius,int slices,int stacks)
+{
+    double h,r;
+	//generate points
+	for(int i=0;i<=stacks;i++)
+	{
+        
+		h=radius*sin(((double)i/(double)stacks)*(pi/2));
+		r=radius*cos(((double)i/(double)stacks)*(pi/2));
+		for(int j=0;j<=slices;j++)
+		{
+			points[i][j].x=r*cos(((double)j/(double)slices)*2*pi);
+			points[i][j].y=r*sin(((double)j/(double)slices)*2*pi);
+			points[i][j].z=h;
+		}
+	}
+    ft=0 ; 
 
 }
 
@@ -280,23 +322,12 @@ void init()
 // This code is taken from main.cpp 
 void drawBall(double radius,int slices,int stacks)
 {
-	struct Sphere_point points[100][100];
-	int i,j;
-	double h,r;
-	//generate points
-	for(i=0;i<=stacks;i++)
-	{
-        
-		h=radius*sin(((double)i/(double)stacks)*(pi/2));
-		r=radius*cos(((double)i/(double)stacks)*(pi/2));
-		for(j=0;j<=slices;j++)
-		{
-			points[i][j].x=r*cos(((double)j/(double)slices)*2*pi);
-			points[i][j].y=r*sin(((double)j/(double)slices)*2*pi);
-			points[i][j].z=h;
-		}
-	}
 
+	int i,j;
+    if(ft)genPoints(radius , slices , stacks) ; 
+
+
+    //sphere_roll(slices,stacks) ; 
 	//draw quads using generated points
 	for(i=0;i<stacks;i++)
 	{
@@ -328,6 +359,7 @@ void drawBall(double radius,int slices,int stacks)
 	}
 
 }
+
 
 void drawFloor()
 {
@@ -486,7 +518,9 @@ void EventScheduler(double elapsed_time)
         Event currentEvent = Event_PQ.top();
         cout << "Time: " << currentEvent.eventScheduledTime<< ", Collision Count: " << currentEvent.collision_count <<"elapsed time "<<elapsed_time<<endl ;
         
-        
+        if(currentEvent.wall_side==posX || currentEvent.wall_side==negY) rrr=0;
+        else if(currentEvent.wall_side==posY || currentEvent.wall_side==negX) rrr=1;
+
         double precision_time1 = elapsed_time+0.02 ; 
         double precision_time2 = elapsed_time-0.02 ; 
         if(currentEvent.eventScheduledTime>=precision_time2 && currentEvent.eventScheduledTime<=precision_time1 && currentEvent.collision_count==collision_count)
@@ -496,7 +530,7 @@ void EventScheduler(double elapsed_time)
             {
                 cout<<"it's time"<<endl ; 
                 ball_look.setx(-1*ball_look.getx()) ;
-                ball_right.setx(-1*ball_right.getx()) ;
+                ball_right.sety(-1*ball_right.gety()) ;
                 ball_angle=180+ball_angle ; 
                 collision_count++ ; 
                 
@@ -504,10 +538,11 @@ void EventScheduler(double elapsed_time)
             else 
             {
                 ball_look.sety(-1*ball_look.gety()) ;
-                ball_right.sety(-1*ball_right.gety()) ;
+                ball_right.setx(-1*ball_right.getx()) ;
                 ball_angle=180+ball_angle ; 
                 collision_count++ ;                 
             }
+           
             Event_PQ.pop() ; 
             showPQ();
             dis_calc() ;
@@ -582,9 +617,11 @@ void rolling_ball()
 
     glPushMatrix() ;
     glTranslatef(ball_position.getx() , ball_position.gety() , ball_position.getz()) ; 
-    if(roll)
-        glRotatef(ball_rolling_angle ,  ball_right.getx() , ball_right.gety() , ball_right.getz() ) ; //! angle 
-    else glRotatef(ball_rolling_angle ,  bprev_right.getx() , bprev_right.gety() , bprev_right.getz() ) ;
+    
+    //if(roll)
+      //  glRotatef(ball_rolling_angle ,  ball_right.getx() , ball_right.gety() , ball_right.getz() ) ; //! angle 
+    //else glRotatef(ball_rolling_angle ,  bprev_right.getx() , bprev_right.gety() , bprev_right.getz() ) ;
+    
     drawBall(ball_radius,15,12) ;  // radius , slice and stack 
     glPopMatrix() ; 
 
@@ -626,10 +663,14 @@ void timer(int val)
     if(!manual_ball_control)
     {
         ball_position=ball_position.addition(ball_look) ;
-        //ball_position.show("timer") ; 
+        if(collision_count==0)
+            ball_rolling_angle+=rolling_amount ; 
+        if(rrr==0) ball_rolling_angle+=rolling_amount ;
+        else if(rrr=1) ball_rolling_angle+=rolling_amount ;
         glutPostRedisplay(); 
         
     }
+    //sphere_roll(15,12);
 glutTimerFunc(50,timer,0);
 }
     
