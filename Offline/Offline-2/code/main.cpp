@@ -24,8 +24,8 @@ void point_output(point p)
 int main()
 {
     point eye , look , up ; 
-    double fov , aspect_ratio, near_plane , far_plane ; 
-
+    double fovy , aspect_ratio, near_plane , far_plane ; 
+    int trianglecount = 0 ; 
     string inputfile="scene.txt" ; 
     string outputfile="stage1.txt" ; 
     in.open(inputfile) ; 
@@ -34,7 +34,7 @@ int main()
     look=point_input() ; 
     up=point_input() ; 
 
-    in>>fov>>aspect_ratio>>near_plane>>far_plane;
+    in>>fovy>>aspect_ratio>>near_plane>>far_plane;
 
  
 
@@ -54,6 +54,7 @@ int main()
         
         if(command=="triangle")
         {
+            trianglecount++ ; 
             
             point ta , tb , tc ; 
             ta=point_input() ; 
@@ -112,7 +113,7 @@ int main()
         }
         else if(command=="push")
         {
-            mst.push(mst.top()) ; //! why 
+            mst.push(mst.top()) ; //! ....
         }
         else if(command=="pop")
         {
@@ -126,6 +127,47 @@ int main()
     }
     in.close() ; 
     out.close() ; 
+
+
+    in.open("stage1.txt") ; 
+    out.open("stage2.txt") ; 
+    
+    matrix lookat  ; 
+    lookat=lookat.viewTransform(eye , look , up ) ;
+
+    for(int i=0 ; i<trianglecount ; i++)
+    {
+        point p1,p2,p3 ; 
+        p1=point_input() ;  p2=point_input() ;  p3=point_input() ;
+        p1=lookat.transformation(p1) ; 
+        p2=lookat.transformation(p2) ;
+        p3=lookat.transformation(p3) ; 
+        point_output(p1) ;
+        point_output(p2) ;
+        point_output(p3) ;  
+        out<<endl ;
+    }
+    in.close() ; 
+    out.close();
+
+    in.open("stage2.txt") ;
+    out.open("stage3.txt") ; 
+    matrix perspective ; 
+    perspective=perspective.projection(fovy , aspect_ratio , near_plane , far_plane) ; 
+    for(int i=0 ; i<trianglecount ; i++)
+    {
+        point p1,p2,p3 ; 
+        p1=point_input() ;  p2=point_input() ;  p3=point_input() ;
+        p1=perspective.transformation(p1) ; 
+        p2=perspective.transformation(p2) ;
+        p3=perspective.transformation(p3) ; 
+        point_output(p1) ;
+        point_output(p2) ;
+        point_output(p3) ;  
+        out<<endl ;
+    }
+    in.close() ; 
+    out.close();
     
 
 }

@@ -85,8 +85,6 @@ class matrix
         // basically doing a 4*4 * 4*1 multiplication 
         point transformation(point p)
         {
-            show("transformation") ; 
-            cout<<p.x<<" "<<p.y<<" "<<p.z<<endl ; 
 
             double retval[4]={0.0} ; 
             double pv[4] = {p.x , p.y , p.z , p.w} ; 
@@ -98,5 +96,42 @@ class matrix
             }
         point newpoint(retval[0]/retval[3] ,retval[1]/retval[3] , retval[2]/retval[3] , 1 ) ; 
         return newpoint ;
+        }
+
+
+
+        matrix viewTransform(point eye , point look , point up)
+        {
+            point l = look.subtraction(eye) ; 
+            l=l.normalize() ; 
+            point r=l.crossproduct(up) ; 
+            r=r.normalize() ; 
+            point u = r.crossproduct(l) ; 
+            translation(eye.scalarMul(-1)) ; // now our arr is the matrix T 
+            // create R and multiply with T
+            matrix R ; 
+            R.make_identity()  ; 
+            R.arr[0][0] = r.x  ; R.arr[0][1] = r.y ; R.arr[0][2] = r.z; 
+            R.arr[1][0] = u.x  ; R.arr[1][1] = u.y ; R.arr[1][2] = u.z; 
+            R.arr[2][0] = -l.x  ; R.arr[2][1] = -l.y ; R.arr[2][2] = -l.z; 
+
+            matrix retval = matrix_multiplication(R) ; 
+            return retval ; 
+
+        }
+        matrix projection(double fovy , double aspect_ratio , double near_plane , double far_plane)
+        {
+            double fovx = fovy*aspect_ratio ; 
+            double t = near_plane*tan(fovy*0.5*acos(-1)/180)  ; 
+            double r = near_plane*tan(fovx*0.5*acos(-1)/180)  ;
+            matrix P ; 
+            P.make_identity() ; 
+            P.arr[0][0] = near_plane/r ; 
+            P.arr[1][1] = near_plane/t ; 
+            P.arr[2][2] = -1*(far_plane+near_plane)/(far_plane-near_plane) ; 
+            P.arr[2][3] = -(2*far_plane*near_plane)/(far_plane-near_plane) ; 
+            P.arr[3][2] = -1 ; 
+            P.arr[3][3] = 0 ; 
+            return P ; 
         }
 };
