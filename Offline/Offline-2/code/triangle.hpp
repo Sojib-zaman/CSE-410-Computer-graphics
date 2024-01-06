@@ -110,15 +110,17 @@ class triangle
         {
             point one = vertices[i] ; 
             point two = vertices[(i+1)%3] ; 
+            //cout<<min(one.y,two.y)<<" "<<max(one.y,two.y)<<endl ; 
+            
             if(Ys>=min(one.y , two.y) && Ys<=max(one.y,two.y)) //so that Ys will intersect our triangle 
             {
+                
                 
                 // now intersection can be in three ways 
                 // if horizontally conincide 
                 if(one.y==two.y)
                 {
-                    cout<<"horizontal"<<endl ;
-                    PossibleintersectingPoints[i].setx(one.x) ;
+                    PossibleintersectingPoints[i].setx(one.x) ; 
 
                 }
                 else 
@@ -127,15 +129,9 @@ class triangle
                     double xa = one.x + (Ys-one.y)*(two.x - one.x) / (two.y-one.y)  ; 
                     if(xa<=max(one.x,two.x)&&xa>=min(one.x,two.x))
                     {
-                       // cout<<xa<< " update"<<endl; 
                         PossibleintersectingPoints[i].setx(xa) ; 
                     }
-                       
-                     
-
                 }
-
-
             }
         }
 
@@ -161,6 +157,11 @@ class triangle
             }
 
         }
+        if(r_ic==-5){
+            cout<<maxXind<<endl ;
+            cout<<Ys<<endl ; 
+            //while(1) ;
+        } 
         vector<double>pab ; 
         pab.push_back(l_ic) ; 
         pab.push_back(r_ic);

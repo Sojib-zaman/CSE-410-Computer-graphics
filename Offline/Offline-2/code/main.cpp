@@ -209,6 +209,7 @@ int main()
     double XLeftLimit = -1.0 ; 
     double YBottomLimit = -1.0 ; 
     double YTopLimit = 1.0 ; 
+    double zmax = 1.0; 
 
     // find the length of each pixel in dx and dy 
     double dx = (XRightLimit - XLeftLimit)  /Screen_Width ; 
@@ -223,7 +224,6 @@ int main()
     double Right_X = XRightLimit - dx/2 ;
 
     // initialize Z buffer 
-    double zmax = 1.0; 
     double** zbuffer = new double*[Screen_Height] ; 
     for(int i=0 ; i<Screen_Height ; i++)
     {
@@ -238,86 +238,88 @@ int main()
     }
     //+ Initialize z buffer and frame buffer end
 
-    int tc = 0 ; 
+
+
+
     //> Z buffer Algorithm start 
     for(triangle t:tri_vec)
     {
-        tc++ ;
-        cout<<"tc 246 "<<tc<<endl ; 
+        
          
         //? The value of top scan and bottom scan line 
         double top_scanlineDistance , bottom_scanelineDistance ;
         
         //? indicates the scaled version of topscanline and bottomscanline 
-        //int top_scanline , bottom_scanline ; 
+        int top_scanline , bottom_scanline ; 
 
-
-
+        //Find top_scanline and bottom_scanline after necessary clipping
         //- TopScanLine 
         if(t.getmaxY() > Top_Y) //If max_y > Top_Y, clip (i.e. ignore) the portion above Top_Y and start scanning from Top_Y.
-            top_scanlineDistance = Top_Y ; 
-        else top_scanlineDistance = t.getmaxY() ; 
+            top_scanlineDistance = Top_Y , top_scanline = 0 ; 
+        else top_scanlineDistance = t.getmaxY() , top_scanline = (int)round((Top_Y-t.getmaxY())/dy) ; 
 
         //-BottomScanLine
         if(t.getminY() < Bottom_Y) 
-            bottom_scanelineDistance = Bottom_Y ; 
-        else bottom_scanelineDistance = t.getminY() ; 
+            bottom_scanelineDistance = Bottom_Y , bottom_scanline = Screen_Height-1 ; 
+        else bottom_scanelineDistance = t.getminY() , bottom_scanline = (Screen_Height-1)-(int)round(t.getminY()-Bottom_Y)/dy; 
+        cout<<"-----------"<<top_scanline<<" "<<bottom_scanline<<endl ;
 
-
-        cout<<"------------------------"<<top_scanlineDistance<<" "<<bottom_scanelineDistance<<endl ; 
-
-        int no_of_scanlines = ceil((top_scanlineDistance - bottom_scanelineDistance) /dy) ; 
         
-        //Find top_scanline and bottom_scanline after necessary clipping
-        //. Skipped , will be doing by accurate values of topscanline and bottomscanline distances 
 
-        for(int row_no = 0 ; row_no<no_of_scanlines ; row_no++)
+        
+
+        //& iterating over Ys begins from here 
+        for(int row_no = top_scanline ; row_no<bottom_scanline ; row_no++)
         {
             //Find left_intersecting_column and right_intersecting_column after necessary clipping
-            double Ys = top_scanlineDistance-row_no*dy ; 
-            double leftInterSectingPoint , RightIntersectingPoint ; 
+            double Ys = Top_Y-row_no*dy ; 
+            if(Ys>t.getmaxY())continue; 
+            double leftIntersectiondistance , RightIntersectiondistance ; 
+            int leftIntersectingColumn , rightIntersectingColumn ; 
             vector<double>pab ; 
             pab = t.getISPoints(Ys);
-            leftInterSectingPoint = pab[0] ; 
-            RightIntersectingPoint= pab[1]; 
-            cout<<"left : "<<leftInterSectingPoint<<" right : "<<RightIntersectingPoint<<endl ; 
+            leftIntersectiondistance = pab[0] ; 
+            RightIntersectiondistance= pab[1] ;
 
-            // If min_x < Left_X, clip (i.e. ignore) the portion to the left of Left_X.
+            if(leftIntersectiondistance<=Left_X) leftIntersectingColumn=0 ; 
+            else leftIntersectingColumn = (int)round((-Left_X+leftIntersectiondistance)/dx) ; 
 
-            // if(t.getmaxX() > Right_X) 
-            //     RightIntersectingPoint = Right_X; 
+            if(RightIntersectiondistance>=Right_X)rightIntersectingColumn = Screen_Width-1 ; 
+            else rightIntersectingColumn = (Screen_Width-1)-(int)round((Right_X-RightIntersectiondistance)/dx) ; 
 
-            // if(t.getminX() < Left_X) 
-            //     leftInterSectingPoint = Left_X ; 
+           
 
+
+
+            //cout<<"j -- left -- right "<<row_no<<" "<<leftIntersectingColumn<<" "<<rightIntersectingColumn<<endl ; 
+
+            
+            
+            
             double za = t.vertices[t.minXind].z + (Ys - t.vertices[t.minXind].y) * (t.vertices[(t.minXind+1)%3].z - t.vertices[t.minXind].z) / (t.vertices[(t.minXind+1)%3].y-t.vertices[t.minXind].y) ; 
             double zb = t.vertices[t.maxXind].z + (Ys - t.vertices[t.maxXind].y) * (t.vertices[(t.maxXind+1)%3].z - t.vertices[t.maxXind].z) / (t.vertices[(t.maxXind+1)%3].y-t.vertices[t.maxXind].y) ; 
             double zp=-1 ; 
-            double constant = (zb-za)*dx/(pab[1]-pab[0]) ; 
-            cout<<"tc 297 "<<tc<<endl ; 
+            double constant = (zb-za)*dx/(RightIntersectiondistance-leftIntersectiondistance) ; 
+            cout<<constant<<endl ;
 
-            cout<<dx<<endl;
-            
-            //! may need to do something like top and bottom 
-            for(double xx = leftInterSectingPoint ; xx<=RightIntersectingPoint ; xx+=dx)
+
+            for(int xx = leftIntersectingColumn ; xx<=rightIntersectingColumn ; xx++)
             {
                 if(zp==-1)
                     zp = za ; 
-                else zp = zp+dx*constant ; 
+                else zp = zp+constant ; 
                 
-                
-                int rc = (Top_Y-Ys)/dy ; 
-                int cr = (xx-Left_X)/dx;
-                if(zp>-1 && zp<zbuffer[cr][rc])
+            
+                if(zp>-1 && zp<zbuffer[row_no][xx])
                 {
-                    zbuffer[cr][rc] = zp ; 
-                    bimg.set_pixel(cr,rc,t.R,t.G,t.B) ; 
+                    zbuffer[row_no][xx] = zp ; 
+                    bimg.set_pixel(xx,row_no,t.R,t.G,t.B) ; 
 
                 }
                 
 
             }
-             cout<<"tc 316 "<<tc<<endl ; 
+
 
             
 
@@ -325,7 +327,7 @@ int main()
 
         //- row inner loop 
         }
-         cout<<"tc 324 "<<tc<<endl ; 
+      
 
 
 
