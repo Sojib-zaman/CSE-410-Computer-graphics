@@ -185,9 +185,6 @@ int main()
     in.open("stage3.txt") ; 
     in2.open("config.txt") ; 
     out.open("z_buffer.txt")  ; 
-
-
-    //> READ DATA START 
     int Screen_Width , Screen_Height ; 
     in2>>Screen_Width>>Screen_Height ; 
     in2.close() ; 
@@ -201,156 +198,72 @@ int main()
         triangle t(a,b,c,random_color()%256,random_color()%256,random_color()%256) ; 
         tri_vec.push_back(t) ; 
     }
-    //+ READ DATA END 
 
+    double Xrightlimit = 1.0 ; 
+    double Xleftlimit = -1.0 ; 
+    double Ybottomlimit = -1.0 ; 
+    double Ytoplimit = 1.0 ; 
 
-    //> Initialize z buffer and frame buffer start 
-    double XRightLimit = 1.0 ; 
-    double XLeftLimit = -1.0 ; 
-    double YBottomLimit = -1.0 ; 
-    double YTopLimit = 1.0 ; 
+    double dx = (Xrightlimit - Xleftlimit)  /Screen_Width ; 
+    double dy = (Ytoplimit - Ybottomlimit)  /Screen_Height ; 
+    double topY = Ytoplimit - dy/2; 
+    double leftX = Xleftlimit + dx/2 ; 
+    double bottomY = Ybottomlimit + dy/2; //needed for clipping
+    double rightX = Xrightlimit - dx/2 ;  // ""
+    double zmax = 1.0 ; 
 
-    // find the length of each pixel in dx and dy 
-    double dx = (XRightLimit - XLeftLimit)  /Screen_Width ; 
-    double dy = (YTopLimit - YBottomLimit)  /Screen_Height ; 
-
-    //specify Top_Y and Left_X values.
-    double Top_Y = YTopLimit - dy/2 ; 
-    double Left_X = XLeftLimit + dx/2 ;
-
-    //also the bottom and right 
-    double Bottom_Y = YBottomLimit + dy/2; 
-    double Right_X = XRightLimit - dx/2 ;
-
-    // initialize Z buffer 
-    double zmax = 1.0; 
     double** zbuffer = new double*[Screen_Height] ; 
     for(int i=0 ; i<Screen_Height ; i++)
     {
         zbuffer[i] = new double[Screen_Width] ; 
         for(int j=0 ; j<Screen_Width ; j++) zbuffer[i][j] = zmax ; 
-    } 
+    }    
     bitmap_image bimg = bitmap_image(Screen_Width , Screen_Height) ; 
     for(int i=0 ; i<Screen_Width ; i++)
     {
         for(int j=0 ; j<Screen_Height ; j++)
             bimg.set_pixel(i,j,0,0,0) ; 
     }
-    //+ Initialize z buffer and frame buffer end
-
-    int tc = 0 ; 
-    //> Z buffer Algorithm start 
-    for(triangle t:tri_vec)
+    for(int i=0 ; i<trianglecount ; i++)
     {
-        tc++ ;
-        cout<<"tc 246 "<<tc<<endl ; 
-         
-        //? The value of top scan and bottom scan line 
-        double top_scanlineDistance , bottom_scanelineDistance ;
+
+        triangle current_triangle = tri_vec[i]  ;
+
         
-        //? indicates the scaled version of topscanline and bottomscanline 
-        //int top_scanline , bottom_scanline ; 
+        double top_scanline = min(topY , current_triangle.getmaxY()); 
+        double bottom_scanline = max( Ybottomlimit , current_triangle.getminY()); 
+
+        int top_linecount = (int)round((topY-top_scanline)/dy) ; 
+        int bottom_linecount = Screen_Height+(int)round((Ybottomlimit-bottom_scanline)/dy) ; 
 
 
 
-        //- TopScanLine 
-        if(t.getmaxY() > Top_Y) //If max_y > Top_Y, clip (i.e. ignore) the portion above Top_Y and start scanning from Top_Y.
-            top_scanlineDistance = Top_Y ; 
-        else top_scanlineDistance = t.getmaxY() ; 
-
-        //-BottomScanLine
-        if(t.getminY() < Bottom_Y) 
-            bottom_scanelineDistance = Bottom_Y ; 
-        else bottom_scanelineDistance = t.getminY() ; 
-
-
-        cout<<"------------------------"<<top_scanlineDistance<<" "<<bottom_scanelineDistance<<endl ; 
-
-        int no_of_scanlines = ceil((top_scanlineDistance - bottom_scanelineDistance) /dy) ; 
-        
-        //Find top_scanline and bottom_scanline after necessary clipping
-        //. Skipped , will be doing by accurate values of topscanline and bottomscanline distances 
-
-        for(int row_no = 0 ; row_no<no_of_scanlines ; row_no++)
+        for(double row_no = top_linecount ; row_no<=bottom_linecount ; row_no++ )
         {
-            //Find left_intersecting_column and right_intersecting_column after necessary clipping
-            double Ys = top_scanlineDistance-row_no*dy ; 
-            double leftInterSectingPoint , RightIntersectingPoint ; 
-            vector<double>pab ; 
-            pab = t.getISPoints(Ys);
-            leftInterSectingPoint = pab[0] ; 
-            RightIntersectingPoint= pab[1]; 
-            cout<<"left : "<<leftInterSectingPoint<<" right : "<<RightIntersectingPoint<<endl ; 
+            double current_Ys = top_scanline-row_no*dy ; 
+            double xa = 0 , xb = 0 ; 
+            pair<double,double>pab ; 
+            pab=current_triangle.getintersectioncolumn(current_Ys) ; 
 
-            // If min_x < Left_X, clip (i.e. ignore) the portion to the left of Left_X.
 
-            // if(t.getmaxX() > Right_X) 
-            //     RightIntersectingPoint = Right_X; 
+            double left_scanline = min(pab.first , pab.second) ; 
+            double right_scanline =max(pab.first , pab.second) ; 
+            if(left_scanline<leftX)left_scanline=leftX ; 
+            if(right_scanline>rightX)right_scanline=rightX ; 
 
-            // if(t.getminX() < Left_X) 
-            //     leftInterSectingPoint = Left_X ; 
-
-            double za = t.vertices[t.minXind].z + (Ys - t.vertices[t.minXind].y) * (t.vertices[(t.minXind+1)%3].z - t.vertices[t.minXind].z) / (t.vertices[(t.minXind+1)%3].y-t.vertices[t.minXind].y) ; 
-            double zb = t.vertices[t.maxXind].z + (Ys - t.vertices[t.maxXind].y) * (t.vertices[(t.maxXind+1)%3].z - t.vertices[t.maxXind].z) / (t.vertices[(t.maxXind+1)%3].y-t.vertices[t.maxXind].y) ; 
-            double zp=-1 ; 
-            double constant = (zb-za)*dx/(pab[1]-pab[0]) ; 
-            cout<<"tc 297 "<<tc<<endl ; 
-
-            cout<<dx<<endl;
-            
-            //! may need to do something like top and bottom 
-            for(double xx = leftInterSectingPoint ; xx<=RightIntersectingPoint ; xx+=dx)
+            for(double column = left_scanline ; column<=right_scanline ; column+=dx)
             {
-                if(zp==-1)
-                    zp = za ; 
-                else zp = zp+dx*constant ; 
-                
-                
-                int rc = (Top_Y-Ys)/dy ; 
-                int cr = (xx-Left_X)/dx;
-                if(zp>-1 && zp<zbuffer[cr][rc])
-                {
-                    zbuffer[cr][rc] = zp ; 
-                    bimg.set_pixel(cr,rc,t.R,t.G,t.B) ; 
-
-                }
-                
-
-            }
-             cout<<"tc 316 "<<tc<<endl ; 
-
-            
-
-
-
-        //- row inner loop 
-        }
-         cout<<"tc 324 "<<tc<<endl ; 
-
-
-
-    //- triangle ends here 
-    }
-
-    bimg.save_image("out.bmp");
-    for(int i = 0; i < Screen_Height; i++) 
-    {
-        for(int j = 0; j < Screen_Width; j++) 
-        {
-            if(zbuffer[i][j] < 1) {
-                out << fixed<<setprecision(7) << zbuffer[i][j] << "\t";
+                double z_value = current_triangle.calculateZvalue(column,current_Ys,left_scanline,right_scanline) ; 
+                zbuffer[row_no][(column-left_scanline)/dx] = 
             }
         }
-        out<<endl;
+
+
+
+
+
+
+
     }
-    out.close();
 
-
-    for (int i = 0; i < Screen_Height; i++) 
-    {
-        delete[] zbuffer[i];
-    }
-    delete[] zbuffer;
-
-    return 0;
 }

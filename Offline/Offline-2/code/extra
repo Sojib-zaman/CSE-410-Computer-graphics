@@ -1,0 +1,43 @@
+
+    //     for(double row_no = top_linecount ; row_no<=bottom_linecount ; row_no++ )
+    //     {
+    //         // only for this particular triangle , where to start and where to end
+    //         double min_intersecting_x = INF ; 
+    //         double max_intersecting_x = -INF ;
+
+    //         // now for each combination of points we find the intersection 
+    //         double current_Ys = top_scanline-row_no*dy ; 
+    //         double xa=formula(current_triangle.a.x , current_triangle.b.x , current_Ys , current_triangle.a.y , current_triangle.b.y) ; 
+    //         double xb=formula(current_triangle.a.x , current_triangle.c.x , current_Ys , current_triangle.a.y , current_triangle.c.y) ; 
+    //         double xc=formula(current_triangle.c.x , current_triangle.b.x , current_Ys , current_triangle.c.y , current_triangle.b.y) ; 
+    //         double low_z , high_z ; 
+
+    //         if(xa>max(current_triangle.a.x , current_triangle.b.x) || xa<min(current_triangle.a.x , current_triangle.b.x)) xa=INF;  
+    //         if(xb>max(current_triangle.a.x , current_triangle.c.x) || xa<min(current_triangle.a.x , current_triangle.c.x)) xb=INF;  
+    //         if(xc>max(current_triangle.c.x , current_triangle.b.x) || xa<min(current_triangle.c.x , current_triangle.b.x)) xc=INF;  
+            
+          
+    //         if(xa!=INF){
+
+    //             if(xa<min_intersecting_x)min_intersecting_x=xa ; 
+    //             if(xa>max_intersecting_x)max_intersecting_x=xa ;
+    //         }
+                      
+    //         if(xb!=INF){
+    //             if(xb<min_intersecting_x)min_intersecting_x=xb ; 
+    //             if(xb>max_intersecting_x)max_intersecting_x=xb ;
+    //         }
+                      
+    //         if(xc!=INF){
+    //             if(xc<min_intersecting_x)min_intersecting_x=xc ; 
+    //             if(xc>max_intersecting_x)max_intersecting_x=xc ;
+    //         }
+
+    //         int left_intersection_column , right_intersection_column ; 
+    //         left_intersection_column = (int)round((min_intersecting_x-leftX)/dx) ; 
+    //         right_intersection_column = Screen_Width-(int)round((rightX-max_intersecting_x)/dx) ;  
+            
+ 
+        
+        
+    //     }

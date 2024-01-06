@@ -1,7 +1,6 @@
 #include<bits/stdc++.h>
 using namespace std; 
-#include "point.h"
-
+#include "point.hpp"
 point rodrigues(point tbr , point norm_axis , double angle)
 {
     double cosx = cos(angle*acos(-1)/180.0) ; 
