@@ -19,11 +19,17 @@ point point_input()
 }
 void point_output(point p)
 {
-    out<<fixed<<setprecision(7)<<p.x<<" "<<p.y<<" "<<p.z<<" "<<endl ;
+    out<<fixed<<setprecision(7)<<p.x<<" "<<p.y<<" "<<p.z<<endl ;
 }
 
 
-
+//code according to spec
+static unsigned long int g_seed = 1;
+inline int random_color()
+{
+g_seed = (214013 * g_seed + 2531011);
+return (g_seed >> 16) & 0x7FFF;
+}
 
 
 int main()
@@ -118,7 +124,7 @@ int main()
         }
         else if(command=="push")
         {
-            mst.push(mst.top()) ; 
+            mst.push(mst.top()) ; //! ....
         }
         else if(command=="pop")
         {
@@ -192,8 +198,7 @@ int main()
         point a = point_input() ; 
         point b = point_input() ; 
         point c = point_input() ; 
-        triangle t = triangle(a,b,c) ;
-        t.setcolor() ; 
+        triangle t(a,b,c,random_color()%256,random_color()%256,random_color()%256) ; 
         tri_vec.push_back(t) ; 
     }
     //+ READ DATA END 
@@ -264,7 +269,7 @@ int main()
         
 
         //& iterating over Ys begins from here 
-        for(int row_no = top_scanline ; row_no<=bottom_scanline ; row_no++)
+        for(int row_no = top_scanline ; row_no<bottom_scanline ; row_no++)
         {
             //Find left_intersecting_column and right_intersecting_column after necessary clipping
             double Ys = Top_Y-row_no*dy ; 
@@ -335,7 +340,7 @@ int main()
         for(int j = 0; j < Screen_Width; j++) 
         {
             if(zbuffer[i][j] < 1) {
-                out << fixed<<setprecision(6) << zbuffer[i][j] << "\t";
+                out << fixed<<setprecision(7) << zbuffer[i][j] << "\t";
             }
         }
         out<<endl;

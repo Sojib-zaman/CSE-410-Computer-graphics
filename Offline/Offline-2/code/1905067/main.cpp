@@ -19,7 +19,7 @@ point point_input()
 }
 void point_output(point p)
 {
-    out<<fixed<<setprecision(7)<<p.x<<" "<<p.y<<" "<<p.z<<" "<<endl ;
+    out<<fixed<<setprecision(7)<<p.x<<" "<<p.y<<" "<<p.z<<endl ;
 }
 
 
@@ -118,7 +118,7 @@ int main()
         }
         else if(command=="push")
         {
-            mst.push(mst.top()) ; 
+            mst.push(mst.top()) ; //! ....
         }
         else if(command=="pop")
         {
