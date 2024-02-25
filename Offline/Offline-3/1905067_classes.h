@@ -17,11 +17,6 @@ using namespace std ;
 #define black 7
 #define white 8
 
-point position_of_camera ; 
-point camera_up ; 
-point camera_look ; 
-point camera_right ; 
-
 
 class point
 {
@@ -89,6 +84,11 @@ class point
 
 
 }; 
+point position_of_camera ; 
+point camera_up ; 
+point camera_look ; 
+point camera_right ; 
+
 
 void setcolor(int color)
 {
@@ -122,5 +122,14 @@ void setcolor(int color)
         printf("aeh?\n") ; 
         break;
     }
+
+}
+point RodriGeneral(point rotatingVector , point withRespectTo , double angle)
+{
+    point perpendicular ; 
+    perpendicular = rotatingVector.crossMul(withRespectTo) ; 
+    point newpoint ; 
+    newpoint = rotatingVector.scalarMul(cos(angle)).addition(perpendicular.scalarMul(sin(angle))) ; 
+    return newpoint ; 
 
 }
