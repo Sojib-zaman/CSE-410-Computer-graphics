@@ -13,23 +13,24 @@ using namespace std ;
 #include <chrono>
 #include "1905067_classes.h"
 
-
-point ball_position ; 
+//+ VARIABLES CAN BE FOUND HERE 
 int square_length =15.0 ; 
-point ball_look ; 
-point ball_right ; 
-point ball_up ; 
-double ball_radius = 5.0 ; 
 int recursion_level ;
 int number_of_pixels ;
 int number_of_objects ;
+int number_of_pointLights ; 
+int number_of_spotLights ;
+vector<Object*> objects ;
+vector<PointLight> point_lights ;
+vector<SpotLight> spot_lights ;
 
 
+//+ -------------------------------------------
 double angle_converter(double degree) {
     return degree * M_PI / 180.0;
 }
 
-void showPointInfo()
+void showVector3DInfo()
 {
     camera_up.show("camera_up") ;
     camera_look.show("camera_look") ;
@@ -38,7 +39,7 @@ void showPointInfo()
 }
 void keyboard(unsigned char key , int a , int b)
 {
-    showPointInfo() ; 
+    showVector3DInfo() ; 
     switch (key)
     {
     case '2':
@@ -66,16 +67,19 @@ void keyboard(unsigned char key , int a , int b)
         camera_right = RodriGeneral(camera_right , camera_look , -0.1) ; 
         camera_up = RodriGeneral(camera_up , camera_look , -0.1) ; 
         break;
+    case ' ':
+        exit(0) ;
+        break;
     default:
         break;
     }
 }
 
 
-//! Changes the camera position only but not the look up or right vectors
+
 void keystrokehandler(int key , int x  , int y)
 {
-    showPointInfo() ;
+    showVector3DInfo() ;
     switch (key)
     {
     case GLUT_KEY_UP:
@@ -109,15 +113,11 @@ void init()
     glLoadIdentity();
     gluPerspective(70,1,1,1000); 
     
-    position_of_camera = point(202.405,210.518,100.642) ; 
-    camera_look = point(-0.465755,-0.547041,-0.695571) ;
-    camera_right = point(0.781163,-0.623468,-0.0327333) ; 
-    camera_up = point(-0.41576,-0.5586,0.717711) ; 
+    position_of_camera = Vector3D(202.405,210.518,100.642) ; 
+    camera_look = Vector3D(-0.465755,-0.547041,-0.695571) ;
+    camera_right = Vector3D(0.781163,-0.623468,-0.0327333) ; 
+    camera_up = Vector3D(-0.41576,-0.5586,0.717711) ; 
 
-    ball_position = point(150,150,5) ; 
-    ball_look = point(1,0,0) ; 
-    ball_right = point(0,1,0) ; 
-    ball_up = point(0,0,1) ;
     
 
 }
@@ -193,7 +193,49 @@ void loaddata()
     fin>>recursion_level ;
     fin>>number_of_pixels ;
     fin>>number_of_objects ;
-    cout<<recursion_level<<" "<<number_of_pixels<<" "<<number_of_objects<<endl ;
+    for(int i=0 ; i<number_of_objects ; i++)
+    {
+        string objectType ; 
+        fin>>objectType ; 
+        if(objectType=="sphere")
+        {
+            Sphere s ; 
+            fin>>s;  
+            s.showSphereInformation() ; 
+            Object *temp ; 
+            temp = new Sphere(s.center , s.radius , s.color , s.ambient , s.diffuse , s.specular , s.reflection , s.shine) ;
+            objects.push_back(temp) ;
+        }
+        else if(objectType=="triangle")
+        {
+            Triangle t ; 
+            fin>>t ;
+            t.showTriangleInformation() ;
+            Object *temp ;
+            temp = new Triangle(t.p1 , t.p2 , t.p3 , t.color , t.ambient , t.diffuse , t.specular , t.reflection , t.shine) ;
+            objects.push_back(temp) ;
+
+
+        }
+    }
+    fin>>number_of_pointLights ;
+    cout<<number_of_pointLights<<endl ;
+    for(int i=0 ; i<number_of_pointLights ; i++)
+    {
+        PointLight pl ; 
+        fin>>pl; 
+        pl.showPointLightInformation() ; 
+        point_lights.push_back(pl) ; 
+    }
+    fin>>number_of_spotLights ; 
+    for(int i=0 ; i<number_of_spotLights ; i++)
+    {
+        SpotLight sl ; 
+        fin>>sl ; 
+        sl.showSpotLightInformation() ; 
+        spot_lights.push_back(sl) ; 
+    }
+
 }  
         
 
