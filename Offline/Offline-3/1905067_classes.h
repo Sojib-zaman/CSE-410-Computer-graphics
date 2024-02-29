@@ -8,14 +8,14 @@ using namespace std ;
 #endif
 
 #define pi (2*acos(0.0)) 
-#define red 1
-#define blue 2
-#define green 3
-#define yellow 4
-#define cyan 5
-#define magenta 6
-#define black 7
-#define white 8
+#define RED 1
+#define BLUE 2
+#define GREEN 3
+#define YELLOE 4
+#define CYAN 5
+#define MAGENTA 6
+#define BLACK 7
+#define WHITE 8
 
 
 class Vector3D
@@ -74,22 +74,76 @@ class Vector3D
         Vector3D newVector3D(y*p.getz()-z*p.gety() ,z*p.getx()-x*p.getz() , x*p.gety()-y*p.getx() ) ; 
         return newVector3D ; 
     }
+    double dotMul(Vector3D p)
+    {
+        return x*p.getx()+y*p.gety()+z*p.getz() ;
+    }
 
-
-        void show(string str="KEYBOARD")
+    void show(string str="KEYBOARD")
     {
         cout<<str<<" "<<x<<","<<y<<","<<z<<"---"<<endl ; 
     }
 
+    void normalize()
+    {
+        double length = sqrt(x*x+y*y+z*z) ; 
+        x=x*1.0/length ; 
+        y=y*1.0/length ; 
+        z=z*1.0/length ; 
+    
+    }
 
 
 }; 
+class Ray
+{
+public:
+    Vector3D start ; // this is Ro
+    Vector3D direction ; // this is Rd (will be normalized later)
+    Ray()
+    {
+        start = Vector3D(0,0,0); 
+        direction = Vector3D(0,0,0) ;
+    }
+    Ray(Vector3D a , Vector3D b){
+        start = a ; 
+        direction = b ; 
+        direction.normalize() ; 
+    }
+};
 Vector3D position_of_camera ; 
 Vector3D camera_up ; 
 Vector3D camera_look ; 
 Vector3D camera_right ; 
 
+vector<double> color_norm(vector<double>color)
+{
+    // if color goes beyond 1 then we will make it 1
+    // if color goes below 0 then we will make it 0
+    vector<double> newColor ;
+    newColor.push_back(max(0.0,min(1.0,color[0]))) ;
+    newColor.push_back(max(0.0,min(1.0,color[1]))) ;
+    newColor.push_back(max(0.0,min(1.0,color[2]))) ;
+    return newColor ;
+}
 
+
+vector<double> color_multiplication(vector<double>color,  double value)
+{
+    vector<double> newColor ; 
+    newColor.push_back(color[0]*value) ; 
+    newColor.push_back(color[1]*value) ; 
+    newColor.push_back(color[2]*value) ; 
+    return color_norm(newColor) ; 
+}
+vector<double> color_addition(vector<double>color1 , vector<double>color2)
+{
+    vector<double> newColor ; 
+    newColor.push_back(color1[0]+color2[0]) ; 
+    newColor.push_back(color1[1]+color2[1]) ; 
+    newColor.push_back(color1[2]+color2[2]) ; 
+    return color_norm(newColor) ; 
+}
 
 void setcolor(int color)
 {
@@ -134,6 +188,135 @@ Vector3D RodriGeneral(Vector3D rotatingVector , Vector3D withRespectTo , double 
     return newVector3D ; 
 
 }
+void drawSphere(double radius , double color[] ,int slices , int stacks)
+    {
+        Vector3D SpherePoints[100][100] ; 
+        double h,r;
+        for(int i=0;i<=stacks;i++)
+        {
+            
+            h=radius*sin(((double)i/(double)stacks)*(pi/2));
+            r=radius*cos(((double)i/(double)stacks)*(pi/2));
+            for(int j=0;j<=slices;j++)
+            {
+                SpherePoints[i][j].x=r*cos(((double)j/(double)slices)*2*pi);
+                SpherePoints[i][j].y=r*sin(((double)j/(double)slices)*2*pi);
+                SpherePoints[i][j].z=h;
+            }
+        }
+        for(int i=0;i<stacks;i++)
+        {
+            for(int j=0;j<slices;j++)
+            {
+    
+                glBegin(GL_QUADS);{ 
+                    glColor3f(color[0],color[1],color[2]) ; 
+                    
+               
+                    glVertex3f(SpherePoints[i][j].x,SpherePoints[i][j].y,SpherePoints[i][j].z);
+                    glVertex3f(SpherePoints[i][j+1].x,SpherePoints[i][j+1].y,SpherePoints[i][j+1].z);
+                    glVertex3f(SpherePoints[i+1][j+1].x,SpherePoints[i+1][j+1].y,SpherePoints[i+1][j+1].z);
+                    glVertex3f(SpherePoints[i+1][j].x,SpherePoints[i+1][j].y,SpherePoints[i+1][j].z);
+
+            
+                    glVertex3f(SpherePoints[i][j].x,SpherePoints[i][j].y,-SpherePoints[i][j].z);
+                    glVertex3f(SpherePoints[i][j+1].x,SpherePoints[i][j+1].y,-SpherePoints[i][j+1].z);
+                    glVertex3f(SpherePoints[i+1][j+1].x,SpherePoints[i+1][j+1].y,-SpherePoints[i+1][j+1].z);
+                    glVertex3f(SpherePoints[i+1][j].x,SpherePoints[i+1][j].y,-SpherePoints[i+1][j].z);
+                }glEnd();
+            }
+        }
+
+    }
+class Light
+{
+    public: 
+    Vector3D Super_position ; 
+};
+class PointLight : public Light{
+    public:
+    Vector3D light_position;
+    double color[3];
+    PointLight() {
+        
+        light_position = Vector3D(0, 0, 0);
+        Super_position = light_position ; 
+    }
+    PointLight(Vector3D poisition , double color[3])
+    {
+        this->light_position = poisition ; 
+        this->color[0]=color[0] ; 
+        this->color[1]=color[1] ; 
+        this->color[2]=color[2] ; 
+        Super_position = light_position ;
+
+    }
+    friend istream &operator>>(istream &input , PointLight &pl)
+    {
+        input>>pl.light_position.x>>pl.light_position.y>>pl.light_position.z>>pl.color[0]>>pl.color[1]>>pl.color[2] ; 
+        return input ; 
+    }
+    void showPointLightInformation()
+    {
+        cout<<"Point Light Information"<<endl ; 
+        cout<<"Position: "<<light_position.x<<","<<light_position.y<<","<<light_position.z<<endl ; 
+        cout<<"Color: "<<color[0]<<","<<color[1]<<","<<color[2]<<endl ; 
+    
+    }
+    void draw()
+    {
+        glPushMatrix() ; 
+        glTranslatef(light_position.x,light_position.y,light_position.z) ;
+        drawSphere(4,color,24,24) ;
+        glPopMatrix() ;
+    }
+
+};
+class SpotLight : public Light{
+    public:
+    PointLight point_light ;
+    Vector3D light_direction ;
+    double cutoff_angle ; 
+    SpotLight()
+    {
+        point_light = PointLight() ; 
+        light_direction = Vector3D(0,0,0) ; 
+        cutoff_angle = 0 ; 
+        Super_position = point_light.light_position ;
+    
+    }
+    SpotLight(PointLight pl , Vector3D ld , double c_angle)
+    {
+        point_light = pl  ; 
+        light_direction = ld ;
+        cutoff_angle = c_angle ;
+        Super_position = point_light.light_position ;
+    }
+    friend istream &operator>>(istream &input , SpotLight &sl)
+    {
+        input>>sl.point_light>>sl.light_direction.x>>sl.light_direction.y>>sl.light_direction.z>>sl.cutoff_angle ; 
+        return input ; 
+    }
+    void showSpotLightInformation()
+    {
+        cout<<"Spot Light Information"<<endl ; 
+        point_light.showPointLightInformation() ; 
+        cout<<"Light Direction: "<<light_direction.x<<","<<light_direction.y<<","<<light_direction.z<<endl ; 
+        cout<<"Cutoff Angle: "<<cutoff_angle<<endl ; 
+    
+    }
+    void draw()
+    {
+        glPushMatrix() ; 
+        glTranslatef(point_light.light_position.x,point_light.light_position.y, point_light.light_position.z) ;
+        drawSphere(4,point_light.color,24,24) ;
+        glPopMatrix() ;
+    }
+
+};
+
+extern vector<PointLight> point_lights ;
+extern vector<SpotLight> spot_lights ;
 
 class Object {
 public:
@@ -144,6 +327,7 @@ public:
     double diffuse ;
     double specular ;
     double reflection ;
+    string type ;
 
     //-double coEfficients[4]; //ambient,diffuse,specular,reflection coefficients
     int shine; // exponent term of specular component
@@ -164,6 +348,158 @@ public:
     void setCoEfficients() {
 
     }
+    vector<double> getColorAt(Vector3D intersectionPoint)
+    {
+
+    }
+    virtual Vector3D getNormal(Vector3D IntersectionPoint)
+    {
+
+    }
+
+    //following the intersect pseudo code given on spec
+    double intersect(Ray &r , double current_color[3] , int level)
+    {
+        double t = calculate_t(r) ; 
+        if(level==0) return t ; 
+        // so if level is not 0 then we have to calculate the color of the object
+        // now at the intersection point , we calculate the color based on Phong model (ambient,diffuse,specular)
+        Vector3D intersectionPoint = findInterSectionPoint(r,t) ;
+        vector<double> intersectionCol;
+        vector<double> color; 
+        intersectionCol = getColorAt(intersectionPoint) ;
+        color = color_multiplication(intersectionCol,ambient) ;
+        Vector3D normal = getNormal(intersectionPoint) ;
+        
+        vector<Light> all_lights ;
+        for(int i=0 ; i<point_lights.size() ; i++)
+        {
+            all_lights.push_back(point_lights[i]) ; 
+        }   
+        // If spot light is not in the direction of the intersection point then we will not consider it
+        for(int i=0 ; i<spot_lights.size() ; i++)
+        {
+            Vector3D directionOfSpotLight = spot_lights[i].light_direction ;
+            Vector3D SpotLightToIntersectionPoint = intersectionPoint.subtraction(spot_lights[i].point_light.light_position) ;
+            directionOfSpotLight.normalize() ; 
+            SpotLightToIntersectionPoint.normalize() ; 
+            double createdAngle = acos(directionOfSpotLight.dotMul(SpotLightToIntersectionPoint)) ;
+            if(createdAngle<=spot_lights[i].cutoff_angle) all_lights.push_back(spot_lights[i]) ; 
+        
+        }
+        for(int i=0 ; i<all_lights.size() ; i++)
+        {
+            // Id = Ip . kd . (L.N)
+            // Is = Ip . ks . (R.V)^K 
+            // so have to find L and R first , N is in the normal 
+            Vector3D L , R , V , N ;
+            L = all_lights[i].Super_position.subtraction(intersectionPoint) ;
+            N = normal ;  
+            R = N.scalarMul(2*(L.dotMul(N))).subtraction(L) ;
+            V = position_of_camera.subtraction(intersectionPoint) ;
+
+            //! SKIPPED T_otherMin part (ken korse)
+            L.normalize() ;
+            R.normalize() ;
+            V.normalize() ;
+            double LdotN = L.dotMul(N) ;
+            double RdotV = R.dotMul(V) ;
+
+            vector<double> Id = color_multiplication(intersectionCol,diffuse*LdotN) ;
+            vector<double> Is = color_multiplication(intersectionCol,specular*pow(RdotV,shine)) ;
+            color = color_addition(color,Id) ;
+            color = color_addition(color,Is) ;
+        
+
+        }
+        //set up the current color 
+        current_color[0] = color[0] ;
+        current_color[1] = color[1] ;
+        current_color[2] = color[2] ;
+       //if(level==recursion_level) return t ;
+        return t ;
+
+
+
+
+
+
+    }
+    double calculate_t(Ray &r)
+    {
+        return -1; 
+    }
+    Vector3D findInterSectionPoint(Ray &r , double t)
+    {
+        return r.start.addition(r.direction.scalarMul(t)) ; 
+    }
+};
+extern vector<Object*> objects ;
+struct Floor: public Object{
+    Vector3D initial_point ; 
+    double tilewidth ;
+    double floorwidth ;  
+    Floor()
+    {
+        initial_point = Vector3D(0,0,0) ; 
+        floorwidth = 0 ; 
+    }
+    Floor(Vector3D initial_point ,double floorwidth ,  double tilewidth , double color[3] , double ambient , double diffuse , double specular ,double reflection ,  int shine)
+    {
+        this->initial_point = initial_point ;
+        this->reference_point = Vector3D(0,0,0) ;
+        this->floorwidth = floorwidth ;
+        this->tilewidth = tilewidth ; 
+        this->color[0]=color[0] ; 
+        this->color[1]=color[1] ; 
+        this->color[2]=color[2] ; 
+        this->ambient=ambient ; 
+        this->diffuse=diffuse ; 
+        this->specular=specular ; 
+        this->reflection=reflection ; 
+        this->shine=shine ; 
+    }
+    void draw()
+    {
+        int floorRow = (int)(floorwidth/tilewidth) ;
+        int floorCol = (int)(floorwidth/tilewidth) ; 
+        for(int i=0 ; i<floorRow ; i++)
+        {
+            for(int j=0 ; j<floorCol ; j++)
+            {
+                if((i+j)%2==0)
+                {
+                    //setcolor(white) ; 
+                    glColor3f(color[0],color[1],color[2]) ;
+                }
+                else
+                {
+                    //setcolor(black) ; 
+                    glColor3f(1-color[0],1-color[1],1-color[2]) ; 
+                }
+                glBegin(GL_QUADS) ; 
+                glVertex3f(initial_point.x+i*tilewidth , initial_point.y+j*tilewidth , initial_point.z) ; 
+                glVertex3f(initial_point.x+(i+1)*tilewidth , initial_point.y+j*tilewidth , initial_point.z) ; 
+                glVertex3f(initial_point.x+(i+1)*tilewidth , initial_point.y+(j+1)*tilewidth , initial_point.z) ; 
+                glVertex3f(initial_point.x+i*tilewidth , initial_point.y+(j+1)*tilewidth , initial_point.z) ; 
+                glEnd() ; 
+            }
+        }
+    }
+    void showFloorInformation()
+    {
+        cout<<"Floor Information"<<endl ; 
+        cout<<"Initial Point: "<<initial_point.x<<","<<initial_point.y<<","<<initial_point.z<<endl ; 
+        cout<<"TileWidth: "<<tilewidth<<endl ; 
+        cout<<"Floorwidth: "<<floorwidth<<endl ; 
+        cout<<"Color: "<<color[0]<<","<<color[1]<<","<<color[2]<<endl ; 
+        cout<<"Ambient: "<<ambient<<endl ; 
+        cout<<"Diffuse: "<<diffuse<<endl ; 
+        cout<<"Specular: "<<specular<<endl ; 
+        cout<<"Reflection: "<<reflection<<endl ; 
+        cout<<"Shine: "<<shine<<endl ; 
+    }
+    
 };
 
 struct Sphere : public Object {
@@ -177,8 +513,18 @@ struct Sphere : public Object {
         this->center = center;
         this->radius = radius;
     }
+    Sphere(Vector3D center, double radius , double color[3])
+    {
+        this->reference_point = center ; 
+        this->center = center;
+        this->radius = radius;
+        this->color[0]=color[0] ; 
+        this->color[1]=color[1] ; 
+        this->color[2]=color[2] ; 
+    }
     Sphere(Vector3D center, double radius , double color[3] , double ambient , double diffuse , double specular ,double reflection ,  int shine)
     {
+        this->reference_point = center ; 
         this->center = center;
         this->radius = radius;
         this->color[0]=color[0] ; 
@@ -191,9 +537,20 @@ struct Sphere : public Object {
         this->shine=shine ; 
 
     }
+    Vector3D getNormal(Vector3D intersectionPoint)
+    {
+        Vector3D normal = intersectionPoint.subtraction(center) ; 
+        normal.normalize() ; 
+        return normal ; 
+    }
 
     void draw() {
-        cout << "Drawing a sphere..." << endl;
+  
+       int slices = 24 ; 
+       int stacks = 24 ; 
+       glPushMatrix() ; 
+       drawSphere(radius , color ,slices , stacks) ; 
+       glPopMatrix() ; 
     }
 
     friend istream &operator>>(istream &input, Sphere &s) {
@@ -213,6 +570,40 @@ struct Sphere : public Object {
         cout<<"Shine: "<<shine<<endl ; 
     
     }
+
+    
+    double calculate_t(Ray &r)
+    {
+
+        // general equation (slide) will be finally t2*(Rd.Rd) + t*2*R*Rd + R.R-r^2 = 0
+        // so Rd.Rd = 1 (since normalized ) , and a=1 
+        // b=2*(Rd.R) , c = R.R-r^2
+        double a = 1 ;
+        double b = (r.direction.dotMul(r.start))*2 ;
+        double c = (r.start.dotMul(r.start)) - radius*radius ;
+        double d = b*b - 4*a*c ;
+        if(d<0) return -1 ;
+        double t1 = (-b+sqrt(d))/(2*a) ;
+        double t2 = (-b-sqrt(d))/(2*a) ;
+        if(t1<0 && t2<0) return -1 ;
+        if(t1<0) return t2 ;
+        if(t2<0) return t1 ;
+        return min(t1,t2) ;
+        
+
+
+
+    }
+    vector<double> getColorAt(Vector3D intersectionPoint)
+    {
+        
+        vector<double> color = {color[0],color[1],color[2]}; 
+        
+        return color; 
+    }
+
+    
+
 };
 struct Triangle : public Object
 {
@@ -230,6 +621,7 @@ struct Triangle : public Object
     }
     Triangle(Vector3D p1, Vector3D p2, Vector3D p3 , double color[3] , double ambient , double diffuse , double specular ,double reflection ,  int shine)
     {
+        this->reference_point = Vector3D(0,0,0) ;
         this->p1 = p1;
         this->p2 = p2;
         this->p3 = p3;
@@ -261,68 +653,77 @@ struct Triangle : public Object
         cout<<"Shine: "<<shine<<endl ; 
     
     }
-};
-class PointLight {
-    public:
-    Vector3D light_position;
-    double color[3];
-    PointLight() {
-        light_position = Vector3D(0, 0, 0);
-    }
-    PointLight(Vector3D poisition , double color[3])
+    void draw()
     {
-        this->light_position = poisition ; 
+        glBegin(GL_TRIANGLES) ; 
+        glColor3f(color[0],color[1],color[2]) ; 
+        glVertex3f(p1.x,p1.y,p1.z) ; 
+        glVertex3f(p2.x,p2.y,p2.z) ; 
+        glVertex3f(p3.x,p3.y,p3.z) ; 
+        glEnd() ; 
+    
+    }
+};
+struct GeneralQuadSurface : public Object
+{
+    double a,b,c,d,e,f,g,h,i,j ; 
+    Vector3D cube_reference_point ;
+    double length , width , height ;
+    GeneralQuadSurface()
+    {
+        a=b=c=d=e=f=g=h=i=j=0 ;
+        cube_reference_point = Vector3D(0,0,0) ; 
+        length=0 ; 
+        width=0 ; 
+        height=0 ; 
+    }
+    GeneralQuadSurface(double a , double b , double c , double d , double e , double f , double g , double h , double i , double j , Vector3D cube_reference_point , double length , double width , double height , double color[3] , double ambient , double diffuse , double specular ,double reflection ,  int shine)
+    {
+        this->a=a ; 
+        this->b=b ; 
+        this->c=c ; 
+        this->d=d ; 
+        this->e=e ; 
+        this->f=f ; 
+        this->g=g ; 
+        this->h=h ; 
+        this->i=i ; 
+        this->j=j ; 
+        this->cube_reference_point = cube_reference_point ; 
+        this->length = length ; 
+        this->width = width ; 
+        this->height = height ; 
         this->color[0]=color[0] ; 
         this->color[1]=color[1] ; 
         this->color[2]=color[2] ; 
+        this->ambient=ambient ; 
+        this->diffuse=diffuse ; 
+        this->specular=specular ; 
+        this->reflection=reflection ; 
+        this->shine=shine ; 
     }
-    friend istream &operator>>(istream &input , PointLight &pl)
+    void showGeneralSurface()
     {
-        input>>pl.light_position.x>>pl.light_position.y>>pl.light_position.z>>pl.color[0]>>pl.color[1]>>pl.color[2] ; 
-        return input ; 
-    }
-    void showPointLightInformation()
-    {
-        cout<<"Point Light Information"<<endl ; 
-        cout<<"Position: "<<light_position.x<<","<<light_position.y<<","<<light_position.z<<endl ; 
+        cout<<"General Quadric Surface Information"<<endl ; 
+        cout<<"a: "<<a<<" b: "<<b<<" c: "<<c<<" d: "<<d<<" e: "<<e<<" f: "<<f<<" g: "<<g<<" h: "<<h<<" i: "<<i<<" j: "<<j<<endl ;
+        cout<<"Cube Reference Point: "<<cube_reference_point.x<<","<<cube_reference_point.y<<","<<cube_reference_point.z<<endl ; 
+        cout<<"Length: "<<length<<endl ; 
+        cout<<"Width: "<<width<<endl ; 
+        cout<<"Height: "<<height<<endl ; 
         cout<<"Color: "<<color[0]<<","<<color[1]<<","<<color[2]<<endl ; 
+        cout<<"Ambient: "<<ambient<<endl ; 
+        cout<<"Diffuse: "<<diffuse<<endl ; 
+        cout<<"Specular: "<<specular<<endl ; 
+        cout<<"Reflection: "<<reflection<<endl ; 
+        cout<<"Shine: "<<shine<<endl ; 
     
     }
-
-};
-class SpotLight {
-    public:
-    PointLight point_light ;
-    Vector3D light_direction ;
-    double cutoff_angle ; 
-    SpotLight()
+    friend istream &operator>>(istream &input , GeneralQuadSurface &gqs)
     {
-        point_light = PointLight() ; 
-        light_direction = Vector3D(0,0,0) ; 
-        cutoff_angle = 0 ; 
-    
-    }
-    SpotLight(PointLight pl , Vector3D ld , double c_angle)
-    {
-        point_light = pl  ; 
-        light_direction = ld ;
-        cutoff_angle = c_angle ;
-    }
-    friend istream &operator>>(istream &input , SpotLight &sl)
-    {
-        input>>sl.point_light>>sl.light_direction.x>>sl.light_direction.y>>sl.light_direction.z>>sl.cutoff_angle ; 
+        input>>gqs.a>>gqs.b>>gqs.c>>gqs.d>>gqs.e>>gqs.f>>gqs.g>>gqs.h>>gqs.i>>gqs.j>>gqs.cube_reference_point.x>>gqs.cube_reference_point.y>>gqs.cube_reference_point.z>>gqs.length>>gqs.width>>gqs.height>>gqs.color[0]>>gqs.color[1]>>gqs.color[2]>>gqs.ambient>>gqs.diffuse>>gqs.specular>>gqs.reflection>>gqs.shine ; 
         return input ; 
     }
-    void showSpotLightInformation()
-    {
-        cout<<"Spot Light Information"<<endl ; 
-        point_light.showPointLightInformation() ; 
-        cout<<"Light Direction: "<<light_direction.x<<","<<light_direction.y<<","<<light_direction.z<<endl ; 
-        cout<<"Cutoff Angle: "<<cutoff_angle<<endl ; 
-    
-    }
 
 };
-extern vector<Object*> objects ;
-extern vector<PointLight> point_lights ;
-extern vector<SpotLight> spot_lights ;
+
+
