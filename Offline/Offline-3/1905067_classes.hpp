@@ -300,20 +300,16 @@ void drawSphere(double radius , double color[] ,int slices , int stacks)
         }
 
     }
-class Light
-{
-    public: 
-    Vector3D Super_position ; 
-    vector<double> super_color ;
-};
-class PointLight : public Light{
+
+class PointLight{
     public:
     Vector3D light_position;
     double color[3];
     PointLight() {
         
         light_position = Vector3D(0, 0, 0);
-        Super_position = light_position ; 
+      
+
     }
     PointLight(Vector3D poisition , double color[3])
     {
@@ -321,11 +317,9 @@ class PointLight : public Light{
         this->color[0]=color[0] ; 
         this->color[1]=color[1] ; 
         this->color[2]=color[2] ; 
-        Super_position = light_position ;
-        // set up super color 
-        super_color.push_back(color[0]) ;
-        super_color.push_back(color[1]) ;
-        super_color.push_back(color[2]) ;
+      
+
+        
 
 
     }
@@ -350,7 +344,7 @@ class PointLight : public Light{
     }
 
 };
-class SpotLight : public Light{
+class SpotLight {
     public:
     PointLight point_light ;
     Vector3D light_direction ;
@@ -360,7 +354,8 @@ class SpotLight : public Light{
         point_light = PointLight() ; 
         light_direction = Vector3D(0,0,0) ; 
         cutoff_angle = 0 ; 
-        Super_position = point_light.light_position ;
+       
+
     
     }
     SpotLight(PointLight pl , Vector3D ld , double c_angle)
@@ -369,11 +364,7 @@ class SpotLight : public Light{
         light_direction = ld ;
         cutoff_angle = c_angle ;
         light_direction.normalize() ; 
-        Super_position = point_light.light_position ;
-        // set up super color
-        super_color.push_back(pl.color[0]) ;
-        super_color.push_back(pl.color[1]) ;
-        super_color.push_back(pl.color[2]) ;
+      
 
     }
     friend istream &operator>>(istream &input , SpotLight &sl)
@@ -440,11 +431,17 @@ public:
     }
     virtual Vector3D getNormal(Vector3D IntersectionPoint)
     {
-        return Vector3D(0,0,0) ;
+        if(type=="sphere")
+        {
+            Vector3D normal = IntersectionPoint.subtraction(reference_point) ; 
+            normal.normalize() ; 
+            return normal ; 
+        }
+       
     }
 
     //following the intersect pseudo code given on spec
-double intersect(Ray &r , double current_color[3] , int level)
+    double intersect(Ray &r , double current_color[3] , int level)
     {
         
         double t = this->calculate_t(r , this->type) ; 
@@ -468,7 +465,7 @@ double intersect(Ray &r , double current_color[3] , int level)
 
 
         //cout<<"starting lights"<<endl ; 
-        vector<Light> all_lights ;
+        vector<PointLight> all_lights ;
         for(int i=0 ; i<point_lights.size() ; i++)
         {
             all_lights.push_back(point_lights[i]) ; 
@@ -481,7 +478,7 @@ double intersect(Ray &r , double current_color[3] , int level)
             directionOfSpotLight.normalize() ; 
             SpotLightToIntersectionPoint.normalize() ; 
             double createdAngle = acos(directionOfSpotLight.dotMul(SpotLightToIntersectionPoint)) ;
-            if(convert_to_degree(createdAngle) <=spot_lights[i].cutoff_angle) all_lights.push_back(spot_lights[i]) ; 
+            if(convert_to_degree(createdAngle) <=spot_lights[i].cutoff_angle) all_lights.push_back(spot_lights[i].point_light) ; 
         
         }
        // cout<<"spot light done"<<endl ; 
@@ -492,7 +489,7 @@ double intersect(Ray &r , double current_color[3] , int level)
             // Is = Ip . ks . (R.V)^K 
             // so have to find L and R first , N is in the normal 
             Vector3D L , R , V , N ;
-            L = all_lights[i].Super_position.subtraction(intersectionPoint) ;
+            L = all_lights[i].light_position.subtraction(intersectionPoint) ;
             N = normal ;  
             R = N.scalarMul(2*(L.dotMul(N))).subtraction(L) ;
             V = position_of_camera.subtraction(intersectionPoint) ;
@@ -502,17 +499,17 @@ double intersect(Ray &r , double current_color[3] , int level)
             R.normalize() ;
             N.normalize() ;
             V.normalize() ;
-            double LdotN = L.dotMul(N) ;
-            double RdotV = R.dotMul(V) ;
+      
             
             //sending light from light source to the intersection point 
-            Ray incidentRay(all_lights[i].Super_position,L) ; 
+            Ray incidentRay(all_lights[i].light_position,L) ; 
             //the ray from intersection point to reflection direction 
             Ray reflectedRay(intersectionPoint,R) ;
-
+            double LdotN = L.dotMul(N) ;
+            double RdotV = reflectedRay.direction.dotMul(r.direction) ;
             // now we have to check if the incident ray intersects with any object or not before reaching the intersection point
             // if it intersects then we will not consider the light source
-            double distanceFromIntersectionToLight = intersectionPoint.distance(all_lights[i].Super_position) ;
+            double distanceFromIntersectionToLight = intersectionPoint.distance(all_lights[i].light_position) ;
             bool isBlocked = false ;
             double t2, min_t = 1000000 ;
             for(Object *o : objects)
@@ -529,7 +526,17 @@ double intersect(Ray &r , double current_color[3] , int level)
 
             if(!isBlocked)
             {
-                
+                double lambert_value = max(0.0,-LdotN) ;
+                double phong_value = max(0.0,pow(-RdotV,shine)) ;
+                // cout<<"lambert value "<<lambert_value<<endl ;
+                // cout<<"phong value "<<phong_value<<endl ;
+
+
+              
+                for(int rgb=0 ; rgb<3 ;rgb++)
+                {
+                    color[rgb] += all_lights[i].color[rgb]*intersectionCol[rgb]*(diffuse*lambert_value + specular*phong_value) ;
+                }
             }
       
         
@@ -555,7 +562,6 @@ double intersect(Ray &r , double current_color[3] , int level)
     virtual double calculate_t(Ray &r , string str)
     {
             //cout<<"This is the base class"<<str<<endl ;
-            return 100 ; 
     }
     Vector3D findInterSectionPoint(Ray &r , double t)
     {
@@ -669,7 +675,7 @@ public:
         this->shine=shine ; 
 
     }
-    Vector3D getNormal(Vector3D intersectionPoint)
+    Vector3D getNormal(Vector3D intersectionPoint) override
     {
         Vector3D normal = intersectionPoint.subtraction(center) ; 
         normal.normalize() ; 

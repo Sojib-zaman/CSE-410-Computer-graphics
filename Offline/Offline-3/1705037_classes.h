@@ -415,7 +415,8 @@ void Object::setDiffuseAndSpecular(Vector3D normal,Ray *r,Vector3D intersection_
 
         double lambert_value = max(0.0,-(ir->dir.dot(normal)));
         double phong_value = pow(max(0.0,-(r->dir.dot(rr->dir))),shine);
-
+        cout<<lambert_value<<" "<<phong_value<<endl;
+        
 
 
         for(int i=0;i<3;i++)
@@ -595,12 +596,12 @@ double Sphere::intersect(Ray* r,double* clr,int level)
         if(t1>0) t = t1;
         else t = t2;
     }
-    if(t>0)
-    {
-            cout<<r->start.x<<" "<<r->start.y<<" "<<r->start.z<<endl;
-    cout<<r->dir.x<<" "<<r->dir.y<<" "<<r->dir.z<<endl;
-    cout<<a<<" "<<b<<" "<<c<<" "<<d<<endl ;  cout<<"t"<<t<<endl ; 
-    }
+    // if(t>0)
+    // {
+    //         cout<<r->start.x<<" "<<r->start.y<<" "<<r->start.z<<endl;
+    // cout<<r->dir.x<<" "<<r->dir.y<<" "<<r->dir.z<<endl;
+    // cout<<a<<" "<<b<<" "<<c<<" "<<d<<endl ;  cout<<"t"<<t<<endl ; 
+    // }
    
     
     if(level==0)

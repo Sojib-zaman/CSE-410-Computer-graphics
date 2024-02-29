@@ -100,7 +100,7 @@ void capture()
                 tMin = nearest_Object.intersect(ray , color , 1) ; // 1 means that color is needed and will be computed
             }
             //nearest object er color diye color kora lagbe
-            showColor(color) ; 
+           
             bitImage.set_pixel(i,j,color[0]*255,color[1]*255,color[2]*255) ; //! NAKI J , I
             nearest = -1 ;
             tMin = 1000000000.0 ; // a large number for tmin
