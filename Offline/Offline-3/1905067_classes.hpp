@@ -18,6 +18,65 @@ using namespace std ;
 #define WHITE 8
 
 
+
+
+
+
+class Vector3D ;
+class Ray ;
+class Object ;
+class Light ;
+class PointLight ;
+class SpotLight ;
+class Sphere ;
+class Triangle ;
+class GeneralQuadSurface ;
+class Floor ;
+
+
+
+
+
+
+
+
+extern int recursion_level;
+extern vector<Object*> objects ;
+extern vector<PointLight> point_lights ;
+extern vector<SpotLight> spot_lights ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+double convert_to_degree(double radian)
+{
+    return radian*180/pi;
+}
+
 class Vector3D
 {
     public:
@@ -95,6 +154,19 @@ class Vector3D
 
 
 }; 
+
+
+
+
+Vector3D position_of_camera ; 
+Vector3D camera_up ; 
+Vector3D camera_look ; 
+Vector3D camera_right ; 
+
+
+
+
+
 class Ray
 {
 public:
@@ -111,10 +183,6 @@ public:
         direction.normalize() ; 
     }
 };
-Vector3D position_of_camera ; 
-Vector3D camera_up ; 
-Vector3D camera_look ; 
-Vector3D camera_right ; 
 
 vector<double> color_norm(vector<double>color)
 {
@@ -290,6 +358,7 @@ class SpotLight : public Light{
         point_light = pl  ; 
         light_direction = ld ;
         cutoff_angle = c_angle ;
+        light_direction.normalize() ; 
         Super_position = point_light.light_position ;
     }
     friend istream &operator>>(istream &input , SpotLight &sl)
@@ -315,9 +384,10 @@ class SpotLight : public Light{
 
 };
 
-extern vector<PointLight> point_lights ;
-extern vector<SpotLight> spot_lights ;
-
+void showVecCol(vector<double>col)
+{
+    //cout<<"color "<<col[0]<<" "<<col[1]<<" "<<col[2]<<endl ; 
+}
 class Object {
 public:
     Vector3D reference_point;
@@ -348,20 +418,27 @@ public:
     void setCoEfficients() {
 
     }
-    vector<double> getColorAt(Vector3D intersectionPoint)
+    virtual vector<double> getColorAt(Vector3D intersectionPoint)
     {
-
+        vector<double> xx = {color[0],color[1],color[2]} ; 
+        return xx ;
     }
     virtual Vector3D getNormal(Vector3D IntersectionPoint)
     {
-
+        return Vector3D(0,0,0) ;
     }
 
     //following the intersect pseudo code given on spec
-    double intersect(Ray &r , double current_color[3] , int level)
+double intersect(Ray &r , double current_color[3] , int level)
     {
-        double t = calculate_t(r) ; 
+        
+        double t = this->calculate_t(r , this->type) ; 
+        //cout<<t<<endl ; 
         if(level==0) return t ; 
+
+
+
+
         // so if level is not 0 then we have to calculate the color of the object
         // now at the intersection point , we calculate the color based on Phong model (ambient,diffuse,specular)
         Vector3D intersectionPoint = findInterSectionPoint(r,t) ;
@@ -370,7 +447,12 @@ public:
         intersectionCol = getColorAt(intersectionPoint) ;
         color = color_multiplication(intersectionCol,ambient) ;
         Vector3D normal = getNormal(intersectionPoint) ;
-        
+
+       
+
+
+
+        //cout<<"starting lights"<<endl ; 
         vector<Light> all_lights ;
         for(int i=0 ; i<point_lights.size() ; i++)
         {
@@ -384,9 +466,11 @@ public:
             directionOfSpotLight.normalize() ; 
             SpotLightToIntersectionPoint.normalize() ; 
             double createdAngle = acos(directionOfSpotLight.dotMul(SpotLightToIntersectionPoint)) ;
-            if(createdAngle<=spot_lights[i].cutoff_angle) all_lights.push_back(spot_lights[i]) ; 
+            if(convert_to_degree(createdAngle) <=spot_lights[i].cutoff_angle) all_lights.push_back(spot_lights[i]) ; 
         
         }
+       // cout<<"spot light done"<<endl ; 
+        // now all lights contain both the pointlight and the spotlights (that are valid)
         for(int i=0 ; i<all_lights.size() ; i++)
         {
             // Id = Ip . kd . (L.N)
@@ -398,43 +482,72 @@ public:
             R = N.scalarMul(2*(L.dotMul(N))).subtraction(L) ;
             V = position_of_camera.subtraction(intersectionPoint) ;
 
-            //! SKIPPED T_otherMin part (ken korse)
+
             L.normalize() ;
             R.normalize() ;
+            N.normalize() ;
             V.normalize() ;
             double LdotN = L.dotMul(N) ;
             double RdotV = R.dotMul(V) ;
+            
+            //sending light from light source to the intersection point 
+            Ray incidentRay(all_lights[i].Super_position,L) ; 
+            //the ray from intersection point to reflection direction 
+            Ray reflectedRay(intersectionPoint,R) ;
 
-            vector<double> Id = color_multiplication(intersectionCol,diffuse*LdotN) ;
-            vector<double> Is = color_multiplication(intersectionCol,specular*pow(RdotV,shine)) ;
-            color = color_addition(color,Id) ;
-            color = color_addition(color,Is) ;
+            // now we have to check if the incident ray intersects with any object or not before reaching the intersection point
+            // if it intersects then we will not consider the light source
+            bool isBlocked = false ;
+            double t2, min_t = 1000000 ;
+            for(Object *o : objects)
+            {
+                t2 = o->calculate_t(incidentRay , "line 441") ; //basically calling the intersect function of the object , with level 0 it will go to calculate_t
+                if(t2>0 && t2<min_t)
+                {
+                    min_t = t2 ;
+                }
+            }
+            //cout<<"blocked calculation done"<<endl ; 
+            if(min_t<t) isBlocked = true ;
+
+            if(!isBlocked)
+            {
+                vector<double> Id = color_multiplication(intersectionCol,diffuse*LdotN) ;
+                vector<double> Is = color_multiplication(intersectionCol,specular*pow(RdotV,shine)) ;
+                color = color_addition(color,Id) ;
+                color = color_addition(color,Is) ;
+            }
+      
         
 
         }
+        //cout<<recursion_level<<endl ; 
+        if(level==recursion_level) return t ;
         //set up the current color 
         current_color[0] = color[0] ;
         current_color[1] = color[1] ;
         current_color[2] = color[2] ;
-       //if(level==recursion_level) return t ;
-        return t ;
+
+
+        //showVecCol(color) ; 
 
 
 
-
-
-
+        return t ; 
     }
-    double calculate_t(Ray &r)
+    
+    
+    virtual double calculate_t(Ray &r , string str)
     {
-        return -1; 
+            //cout<<"This is the base class"<<str<<endl ;
+            return 100 ; 
     }
     Vector3D findInterSectionPoint(Ray &r , double t)
     {
         return r.start.addition(r.direction.scalarMul(t)) ; 
     }
 };
-extern vector<Object*> objects ;
+
 struct Floor: public Object{
     Vector3D initial_point ; 
     double tilewidth ;
@@ -499,10 +612,14 @@ struct Floor: public Object{
         cout<<"Reflection: "<<reflection<<endl ; 
         cout<<"Shine: "<<shine<<endl ; 
     }
-    
+    double calculate_t(Ray &r , string str) override
+    {
+
+    }
 };
 
 struct Sphere : public Object {
+public:
     Vector3D center;
     double radius;
     Sphere() {
@@ -572,19 +689,34 @@ struct Sphere : public Object {
     }
 
     
-    double calculate_t(Ray &r)
+    double calculate_t(Ray &r , string str) override
     {
 
         // general equation (slide) will be finally t2*(Rd.Rd) + t*2*R*Rd + R.R-r^2 = 0
         // so Rd.Rd = 1 (since normalized ) , and a=1 
         // b=2*(Rd.R) , c = R.R-r^2
+        
+        Vector3D CurrStart = r.start.subtraction(reference_point) ; 
+        
         double a = 1 ;
-        double b = (r.direction.dotMul(r.start))*2 ;
-        double c = (r.start.dotMul(r.start)) - radius*radius ;
+        double b = (r.direction.dotMul(CurrStart))*2 ;
+        double c = (CurrStart.dotMul(CurrStart)) - radius*radius ;
         double d = b*b - 4*a*c ;
+       
         if(d<0) return -1 ;
+       
         double t1 = (-b+sqrt(d))/(2*a) ;
-        double t2 = (-b-sqrt(d))/(2*a) ;
+        double t2 = (-b-sqrt(d))/(2*a) ;   
+        if(t1>0 || t2>0)
+        { 
+            // cout<<a<<" "<<b<<" "<<c<<" "<<d<<endl ; 
+            // cout<<t1<<" "<<t2<<endl ; 
+            // cout<<"here "<<str<<endl; 
+            // cout<<"ray info : "<<endl ;
+            // r.start.show("start") ;
+            // r.direction.show("direction") ;
+        }
+
         if(t1<0 && t2<0) return -1 ;
         if(t1<0) return t2 ;
         if(t2<0) return t1 ;
@@ -597,9 +729,9 @@ struct Sphere : public Object {
     vector<double> getColorAt(Vector3D intersectionPoint)
     {
         
-        vector<double> color = {color[0],color[1],color[2]}; 
-        
-        return color; 
+        vector<double> xx = {color[0],color[1],color[2]}; 
+    
+        return xx; 
     }
 
     
@@ -663,6 +795,11 @@ struct Triangle : public Object
         glEnd() ; 
     
     }
+    double calculate_t(Ray &r , string str) override
+    {
+
+    }
+    
 };
 struct GeneralQuadSurface : public Object
 {
@@ -722,6 +859,10 @@ struct GeneralQuadSurface : public Object
     {
         input>>gqs.a>>gqs.b>>gqs.c>>gqs.d>>gqs.e>>gqs.f>>gqs.g>>gqs.h>>gqs.i>>gqs.j>>gqs.cube_reference_point.x>>gqs.cube_reference_point.y>>gqs.cube_reference_point.z>>gqs.length>>gqs.width>>gqs.height>>gqs.color[0]>>gqs.color[1]>>gqs.color[2]>>gqs.ambient>>gqs.diffuse>>gqs.specular>>gqs.reflection>>gqs.shine ; 
         return input ; 
+    }
+    double calculate_t(Ray &r , string str) override
+    {
+
     }
 
 };

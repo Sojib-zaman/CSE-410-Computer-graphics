@@ -11,7 +11,7 @@ using namespace std ;
 #endif
 #include<math.h>
 #include <chrono>
-#include "1905067_classes.h"
+#include "1905067_classes.hpp"
 #include "bitmap_image.hpp"
 //+ VARIABLES CAN BE FOUND HERE  -----------------------------------------------------------
 
@@ -41,8 +41,14 @@ int imageCount = 1 ;
 double angle_converter(double degree) {
     return degree * M_PI / 180.0;
 }
+void showColor(double *color)
+{
+    //cout<<"Color : "<<color[0]<<" "<<color[1]<<" "<<color[2]<<endl ; 
+}
 void capture()
 {
+    ofstream fout ;
+    fout.open("output.txt") ;
 
     bitmap_image bitImage = bitmap_image(number_of_pixels , number_of_pixels) ; 
     for(int column=0 ; column<number_of_pixels ; column++)
@@ -73,13 +79,18 @@ void capture()
             double *color = new double[3] ;
             color[0] = color[1] = color[2] = 0.0 ;
             int obj_count = 0 ; 
+
+
+           
             for(Object *o : objects)
             {
-                t = o->intersect(ray , color , 0) ; // 0 means that color is not needed
+                t = o->intersect(ray , color , 0) ;
+                // 0 means that color is not needed
                 if(t<tMin && t>0)
                 {
                     tMin = t ; 
                     nearest = obj_count ; 
+                    fout<<"in main"<<tMin<<endl ;  
                 }
                 obj_count++ ;
             }
@@ -88,7 +99,8 @@ void capture()
                 Object nearest_Object = *objects[nearest] ;
                 tMin = nearest_Object.intersect(ray , color , 1) ; // 1 means that color is needed and will be computed
             }
-            
+            //nearest object er color diye color kora lagbe
+            showColor(color) ; 
             bitImage.set_pixel(i,j,color[0]*255,color[1]*255,color[2]*255) ; //! NAKI J , I
             nearest = -1 ;
             tMin = 1000000000.0 ; // a large number for tmin
@@ -198,6 +210,12 @@ void init()
     camera_up = Vector3D(0.366117,-0.223181,0.903409) ;
 
 
+    position_of_camera = Vector3D(150,150,0) ;
+    camera_look = Vector3D(-0.707, -0.707, 0) ;
+    camera_right = Vector3D(-0.707, 0.707, 0) ;
+    camera_up = Vector3D(0, 0, 1) ;
+
+
     
 
 }
@@ -267,7 +285,7 @@ void loaddata()
     ifstream fin ;
     fin.open("scene.txt") ;
     //- pushing the floor object beforehand 
-    pushFloor() ; 
+    //pushFloor() ; 
 
 
     fin>>recursion_level ;
@@ -316,7 +334,7 @@ void loaddata()
     {
         PointLight pl ; 
         fin>>pl; 
-        pl.showPointLightInformation() ; 
+       // pl.showPointLightInformation() ; 
         point_lights.push_back(pl) ; 
     }
     fin>>number_of_spotLights ; 
@@ -324,7 +342,7 @@ void loaddata()
     {
         SpotLight sl ; 
         fin>>sl ; 
-        sl.showSpotLightInformation() ; 
+      //  sl.showSpotLightInformation() ; 
         spot_lights.push_back(sl) ; 
     }
 
