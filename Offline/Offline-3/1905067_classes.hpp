@@ -16,7 +16,7 @@ using namespace std ;
 #define MAGENTA 6
 #define BLACK 7
 #define WHITE 8
-
+#define epsilon 0.0000001
 
 
 
@@ -150,6 +150,10 @@ class Vector3D
         y=y*1.0/length ; 
         z=z*1.0/length ; 
     
+    }
+    double distance(Vector3D p)
+    {
+        return sqrt((x-p.getx())*(x-p.getx())+(y-p.gety())*(y-p.gety())+(z-p.getz())*(z-p.getz())) ; 
     }
 
 
@@ -300,6 +304,7 @@ class Light
 {
     public: 
     Vector3D Super_position ; 
+    vector<double> super_color ;
 };
 class PointLight : public Light{
     public:
@@ -317,6 +322,11 @@ class PointLight : public Light{
         this->color[1]=color[1] ; 
         this->color[2]=color[2] ; 
         Super_position = light_position ;
+        // set up super color 
+        super_color.push_back(color[0]) ;
+        super_color.push_back(color[1]) ;
+        super_color.push_back(color[2]) ;
+
 
     }
     friend istream &operator>>(istream &input , PointLight &pl)
@@ -360,6 +370,11 @@ class SpotLight : public Light{
         cutoff_angle = c_angle ;
         light_direction.normalize() ; 
         Super_position = point_light.light_position ;
+        // set up super color
+        super_color.push_back(pl.color[0]) ;
+        super_color.push_back(pl.color[1]) ;
+        super_color.push_back(pl.color[2]) ;
+
     }
     friend istream &operator>>(istream &input , SpotLight &sl)
     {
@@ -497,25 +512,24 @@ double intersect(Ray &r , double current_color[3] , int level)
 
             // now we have to check if the incident ray intersects with any object or not before reaching the intersection point
             // if it intersects then we will not consider the light source
+            double distanceFromIntersectionToLight = intersectionPoint.distance(all_lights[i].Super_position) ;
             bool isBlocked = false ;
             double t2, min_t = 1000000 ;
             for(Object *o : objects)
             {
                 t2 = o->calculate_t(incidentRay , "line 441") ; //basically calling the intersect function of the object , with level 0 it will go to calculate_t
-                if(t2>0 && t2<min_t)
+                if(t2>0 && t2<(distanceFromIntersectionToLight-epsilon))
                 {
                     min_t = t2 ;
+                    break ; 
                 }
             }
             //cout<<"blocked calculation done"<<endl ; 
-            if(min_t<t) isBlocked = true ;
+            if(min_t!=1000000) isBlocked = true ;
 
             if(!isBlocked)
             {
-                vector<double> Id = color_multiplication(intersectionCol,diffuse*LdotN) ;
-                vector<double> Is = color_multiplication(intersectionCol,specular*pow(RdotV,shine)) ;
-                color = color_addition(color,Id) ;
-                color = color_addition(color,Is) ;
+                
             }
       
         
@@ -528,8 +542,9 @@ double intersect(Ray &r , double current_color[3] , int level)
         current_color[1] = color[1] ;
         current_color[2] = color[2] ;
 
+        cout<<"color "<<color[0]<<" "<<color[1]<<" "<<color[2]<<endl ;
 
-        //showVecCol(color) ; 
+        
 
 
 
