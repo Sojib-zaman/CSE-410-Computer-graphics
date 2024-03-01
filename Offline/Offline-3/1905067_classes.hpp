@@ -56,30 +56,6 @@ extern vector<SpotLight> spot_lights ;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 double convert_to_degree(double radian)
 {
     return radian*180/pi;
@@ -569,7 +545,7 @@ public:
 
         if(level>=recursion_level) return MinimumT;
        
-         calc_reflection(r.direction, normal , intersectionPoint , current_color , level) ;
+        calc_reflection(r.direction, normal , intersectionPoint , current_color , level) ;
         return MinimumT ; 
     }
     Vector3D findInterSectionPoint(Ray &r , double t)

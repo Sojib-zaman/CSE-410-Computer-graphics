@@ -100,7 +100,7 @@ void capture()
                 tMin = nearest_Object->intersect(ray , color , 1) ; // 1 means that color is needed and will be computed
                 //color.show() ;
                 color.normalize() ; 
-                color.show() ; 
+                //color.show() ; 
         
                 bitImage.set_pixel(i,j,color.r*255,color.g*255,color.b*255) ; 
             }
@@ -127,7 +127,7 @@ void showVector3DInfo()
 }
 void keyboard(unsigned char key , int a , int b)
 {
-    //showVector3DInfo() ; 
+    showVector3DInfo() ; 
     switch (key)
     {
     case '2':
@@ -203,6 +203,8 @@ void init()
     glLoadIdentity();
     gluPerspective(cameraGlutAngle,1,1,1000); 
     
+    //! JUST SAVING SOME GOOD VIEWING POSITIONS :) 
+
     position_of_camera = Vector3D(202.405,210.518,100.642) ; 
     camera_look = Vector3D(-0.465755,-0.547041,-0.695571) ;
     camera_right = Vector3D(0.781163,-0.623468,-0.0327333) ; 
@@ -213,12 +215,17 @@ void init()
     camera_look = Vector3D(0.602433,-0.683076,-0.412892) ;
     camera_right = Vector3D(0.709247,0.695411,-0.115635) ;
     camera_up = Vector3D(0.366117,-0.223181,0.903409) ;
-
+    position_of_camera = Vector3D(-11.9405,-136.957,77.8109) ;
+    camera_look = Vector3D(0.443898,0.892309,-0.080141) ;
+    camera_right = Vector3D(0.893133,-0.447775,-0.038608) ;
+    camera_up = Vector3D(0.0703571,0.0544553,0.996024) ;
 
     position_of_camera = Vector3D(100,100,50) ;
     camera_look = Vector3D(-0.707, -0.707, 0) ;
     camera_right = Vector3D(-0.707, 0.707, 0) ;
     camera_up = Vector3D(0, 0, 1) ;
+
+
 
 
     
@@ -279,7 +286,7 @@ void pushFloor()
 {
     Vector3D start = Vector3D(-floorwidth/2,-floorwidth/2,0);  
     Color color = Color(0,0,0) ; 
-    Floor floor (start , floorwidth, tile_width , color, .8,.8,.8,.8,1) ;
+   Floor floor (start , floorwidth, tile_width , color, 0.5,0.4,0.3,0.5,.6)  ;
     Object *temp ; 
     temp = new Floor(floor.initial_point , floor.floorwidth , floor.tilewidth , floor.color , floor.ambient , floor.diffuse , floor.specular , floor.reflection , floor.shine) ;
     objects.push_back(temp) ;
@@ -374,5 +381,11 @@ int main(int argc , char** argv)
     glutTimerFunc(50,timer,0);
     glutIdleFunc(idle) ;
     glutMainLoop() ; 
+    for(Object *o : objects)
+    {
+        delete o ; 
+    }
+    point_lights.clear() ;
+    spot_lights.clear() ;
     return 0 ; 
 }
