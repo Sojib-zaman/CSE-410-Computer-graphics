@@ -41,16 +41,14 @@ int imageCount = 1 ;
 double angle_converter(double degree) {
     return degree * M_PI / 180.0;
 }
-void showColor(double *color)
-{
-    //cout<<"Color : "<<color[0]<<" "<<color[1]<<" "<<color[2]<<endl ; 
-}
+
+
 void capture()
 {
     ofstream fout ;
     fout.open("output.txt") ;
 
-    bitmap_image bitImage = bitmap_image(number_of_pixels , number_of_pixels) ; 
+    bitmap_image bitImage = bitmap_image(number_of_pixels , number_of_pixels) ;
     for(int column=0 ; column<number_of_pixels ; column++)
     {
         for(int row=0 ; row<number_of_pixels ; row++)
@@ -59,32 +57,33 @@ void capture()
     string imageName = "Output_1"+to_string(imageCount)+".bmp" ;
     imageCount++ ;
 
-    double window_width = 700.0 ;
-    double window_height = 700.0 ;
+    double window_width = 500.0 ;
+    double window_height = 500.0 ;
     double viewAngle = 80.0 ;
     double plainDistance = (window_height/2.0)/tan(angle_converter(viewAngle)/2.0) ;
     Vector3D topLeft = position_of_camera.addition(camera_look.scalarMul(plainDistance)).subtraction(camera_right.scalarMul(window_width/2.0)).addition(camera_up.scalarMul(window_height/2.0)) ;
     double du = window_width/number_of_pixels ;
     double dv = window_height/number_of_pixels ;
     topLeft = topLeft.addition(camera_right.scalarMul(du/2.0)).subtraction(camera_up.scalarMul(dv/2.0)) ;
-    int nearest = -1; 
-    double t,tMin = 1000000000.0; 
+    
+    int nearest = -4 ; 
+   
     
     for(int i=0 ; i<number_of_pixels ; i++)
     {
         for(int j=0 ; j<number_of_pixels ; j++)
         {
+            Color color ;
             Vector3D current_pixel = topLeft.addition(camera_right.scalarMul(i*du)).subtraction(camera_up.scalarMul(j*dv)) ;
             Ray ray = Ray(position_of_camera , current_pixel.subtraction(position_of_camera)) ;
-            double *color = new double[3] ;
-            color[0] = color[1] = color[2] = 0.0 ;
+            double tMin = 1000000000.0 ; // a large number for tmin
             int obj_count = 0 ; 
 
 
            
             for(Object *o : objects)
             {
-                t = o->intersect(ray , color , 0) ;
+                double t = o->intersect(ray , color , 0) ;
                 // 0 means that color is not needed
                 if(t<tMin && t>0)
                 {
@@ -94,15 +93,21 @@ void capture()
                 }
                 obj_count++ ;
             }
-            if(nearest!=-1)
+            if(nearest!=-4)
             {
-                Object nearest_Object = *objects[nearest] ;
-                tMin = nearest_Object.intersect(ray , color , 1) ; // 1 means that color is needed and will be computed
+                Object *nearest_Object; 
+                nearest_Object= objects[nearest] ; 
+                tMin = nearest_Object->intersect(ray , color , 1) ; // 1 means that color is needed and will be computed
+                //color.show() ;
+                color.normalize() ; 
+                color.show() ; 
+        
+                bitImage.set_pixel(i,j,color.r*255,color.g*255,color.b*255) ; 
             }
             //nearest object er color diye color kora lagbe
            
-            bitImage.set_pixel(i,j,color[0]*255,color[1]*255,color[2]*255) ; //! NAKI J , I
-            nearest = -1 ;
+           
+            nearest = -4;
             tMin = 1000000000.0 ; // a large number for tmin
 
         }
@@ -210,7 +215,7 @@ void init()
     camera_up = Vector3D(0.366117,-0.223181,0.903409) ;
 
 
-    position_of_camera = Vector3D(150,150,0) ;
+    position_of_camera = Vector3D(100,100,50) ;
     camera_look = Vector3D(-0.707, -0.707, 0) ;
     camera_right = Vector3D(-0.707, 0.707, 0) ;
     camera_up = Vector3D(0, 0, 1) ;
@@ -273,11 +278,13 @@ void timer(int val)
 void pushFloor()
 {
     Vector3D start = Vector3D(-floorwidth/2,-floorwidth/2,0);  
-    double color[3] = {1,1,1} ;
-    Floor floor (start , floorwidth, tile_width , color, 0.4 , 0.4 , 0.4 , 0.2 , 0.5) ;
+    Color color = Color(0,0,0) ; 
+    Floor floor (start , floorwidth, tile_width , color, .8,.8,.8,.8,1) ;
     Object *temp ; 
     temp = new Floor(floor.initial_point , floor.floorwidth , floor.tilewidth , floor.color , floor.ambient , floor.diffuse , floor.specular , floor.reflection , floor.shine) ;
     objects.push_back(temp) ;
+    //floor.showFloorInformation() ; 
+   
 
 }
 void loaddata()
@@ -285,7 +292,7 @@ void loaddata()
     ifstream fin ;
     fin.open("scene.txt") ;
     //- pushing the floor object beforehand 
-    //pushFloor() ; 
+    pushFloor() ; 
 
 
     fin>>recursion_level ;
@@ -311,6 +318,7 @@ void loaddata()
             fin>>t ;
             //t.showTriangleInformation() ;
             Object *temp ;
+            //temp = new Triangle(t.a , t.b , t.c , t.color , t.ambient , t.diffuse , t.specular , t.reflection , t.shine) ;
             temp = new Triangle(t.p1 , t.p2 , t.p3 , t.color , t.ambient , t.diffuse , t.specular , t.reflection , t.shine) ;
             temp->type = "triangle" ;
             objects.push_back(temp) ;
@@ -329,7 +337,7 @@ void loaddata()
         }
     }
     fin>>number_of_pointLights ;
-    cout<<number_of_pointLights<<endl ;
+   // cout<<number_of_pointLights<<endl ;
     for(int i=0 ; i<number_of_pointLights ; i++)
     {
         PointLight pl ; 
